@@ -7,3 +7,7 @@ Dedicado aos estudos
 21-05-2025:
     - Introdução
 
+22-05-2025:
+    - Comentários
+    - Variaveis
+
