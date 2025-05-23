@@ -15,6 +15,6 @@ Dedicado aos estudos
  [Link](https://youtu.be/cCzZfz5-aqc)
 
 23-05-2025:  
- - Strings  
+    - Strings  
  [Link](https://youtu.be/Cy6alfcmq7Q)
 
