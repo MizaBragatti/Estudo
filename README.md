@@ -18,3 +18,12 @@ Dedicado aos estudos
     - Strings  
  [Link](https://youtu.be/Cy6alfcmq7Q)
 
+24-05-2025:  
+    - Booleans
+    - Operators
+    - Lists  
+ [Link](https://youtube.com/live/O1e9OZyOr_o)
+
+25-05-2025:  
+    - Tuples
+ [Link](https://youtube.com/live/rkH4sE5mDSQ)
