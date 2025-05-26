@@ -25,5 +25,9 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/O1e9OZyOr_o)
 
 25-05-2025:  
-    - Tuples
+    - Tuples  
  [Link](https://youtube.com/live/rkH4sE5mDSQ)
+
+ 26-06-2025:
+    - Sets  
+ [Link](https://youtube.com/live/T9JfQMnPZko)    
