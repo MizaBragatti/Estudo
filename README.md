@@ -34,4 +34,4 @@ Dedicado aos estudos
 
  27-05-2025:
     - Dictionaries  
- [Link](🔗https://youtube.com/live/GbxtXiLFQFY)    
+ [Link](https://youtube.com/live/GbxtXiLFQFY)    
