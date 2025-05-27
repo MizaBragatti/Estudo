@@ -31,3 +31,7 @@ Dedicado aos estudos
  26-06-2025:
     - Sets  
  [Link](https://youtube.com/live/T9JfQMnPZko)    
+
+ 27-05-2025:
+    - Dictionaries  
+ [Link](🔗https://youtube.com/live/GbxtXiLFQFY)    
