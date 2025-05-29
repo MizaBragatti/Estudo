@@ -35,3 +35,7 @@ Dedicado aos estudos
  27-05-2025:
     - Dictionaries  
  [Link](https://youtube.com/live/GbxtXiLFQFY)    
+
+ 28-05-2025:
+    - If...Else  
+ [Link](https://youtube.com/live/v2WzlqFERr8)   
