@@ -39,3 +39,7 @@ Dedicado aos estudos
  28-05-2025:
     - If...Else  
  [Link](https://youtube.com/live/v2WzlqFERr8)   
+
+ 29-05-2025:
+    - Match - While / For Loops
+ [Link](https://youtube.com/live/0Bs4sINszZI)  
