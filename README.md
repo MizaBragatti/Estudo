@@ -43,3 +43,7 @@ Dedicado aos estudos
  29-05-2025:
     - Match - While / For Loops
  [Link](https://youtube.com/live/0Bs4sINszZI)  
+
+ 30-05-2025:
+    - Functions
+ [Link](https://youtube.com/live/38TqvhPWPZ0)  
