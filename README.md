@@ -41,9 +41,13 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/v2WzlqFERr8)   
 
  29-05-2025:
-    - Match - While / For Loops
+    - Match - While / For Loops  
  [Link](https://youtube.com/live/0Bs4sINszZI)  
 
  30-05-2025:
-    - Functions
+    - Functions  
  [Link](https://youtube.com/live/38TqvhPWPZ0)  
+
+ 31-05-2025:
+    - Lambda - Arrays
+ [Link](https://youtube.com/live/jwqsx-v0ESc)  
