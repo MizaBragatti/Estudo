@@ -51,3 +51,7 @@ Dedicado aos estudos
  31-05-2025:
     - Lambda - Arrays
  [Link](https://youtube.com/live/jwqsx-v0ESc)  
+
+ 02-06-2025:
+    - Classes/Objects - Inheritance
+ [Link](https://youtube.com/live/a4d21w1kwIg)  
