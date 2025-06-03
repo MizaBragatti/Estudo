@@ -49,9 +49,13 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/38TqvhPWPZ0)  
 
  31-05-2025:
-    - Lambda - Arrays
+    - Lambda - Arrays  
  [Link](https://youtube.com/live/jwqsx-v0ESc)  
 
  02-06-2025:
-    - Classes/Objects - Inheritance
+    - Classes/Objects - Inheritance  
  [Link](https://youtube.com/live/a4d21w1kwIg)  
+
+ 03-06-2025:
+    - Iterators - Polymorphism
+ [Link](https://youtube.com/live/T-E-l53FvUc) 
