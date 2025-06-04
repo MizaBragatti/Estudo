@@ -57,5 +57,9 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/a4d21w1kwIg)  
 
  03-06-2025:
-    - Iterators - Polymorphism
+    - Iterators - Polymorphism  
  [Link](https://youtube.com/live/T-E-l53FvUc) 
+
+ 04-06-2025:
+    - Scopes - Modules  
+ [Link](https://youtube.com/live/RzJ9LAyRKxU) 
