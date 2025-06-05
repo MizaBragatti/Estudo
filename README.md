@@ -63,3 +63,7 @@ Dedicado aos estudos
  04-06-2025:
     - Scopes - Modules  
  [Link](https://youtube.com/live/RzJ9LAyRKxU) 
+
+ 04-06-2025:
+    - Dates - Math - JSON
+ [Link](https://youtube.com/live/MJkTkW47MbU) 
