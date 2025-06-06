@@ -65,5 +65,5 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/RzJ9LAyRKxU) 
 
  04-06-2025:
-    - Dates - Math - JSON
+    - Dates - Math - JSON  
  [Link](https://youtube.com/live/MJkTkW47MbU) 
