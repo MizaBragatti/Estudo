@@ -71,3 +71,7 @@ Dedicado aos estudos
  06-06-2025:
     - RegEx  
  [Link](https://youtube.com/live/2FMntfplB24)  
+
+ 07-06-2025:
+    - PIP - Try...Except
+ [Link](https://youtube.com/live/irvjXWqrIcE)   
