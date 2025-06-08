@@ -73,5 +73,9 @@ Dedicado aos estudos
  [Link](https://youtube.com/live/2FMntfplB24)  
 
  07-06-2025:
-    - PIP - Try...Except
+    - PIP - Try...Except  
  [Link](https://youtube.com/live/irvjXWqrIcE)   
+
+  07-06-2025:
+    - String formatting - User Input - Venv  
+ [Link](https://youtube.com/live/b8fkFIuZUh8)   
