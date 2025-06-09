@@ -76,6 +76,10 @@ Dedicado aos estudos
     - PIP - Try...Except  
  [Link](https://youtube.com/live/irvjXWqrIcE)   
 
-  07-06-2025:
+ 08-06-2025:
     - String formatting - User Input - Venv  
  [Link](https://youtube.com/live/b8fkFIuZUh8)   
+
+ 09-06-2025:
+    - File Handling  
+ [Link](https://youtube.com/live/8JCG2Nrq82k) 
