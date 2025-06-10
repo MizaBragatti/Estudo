@@ -83,3 +83,7 @@ Dedicado aos estudos
  09-06-2025:
     - File Handling  
  [Link](https://youtube.com/live/8JCG2Nrq82k) 
+
+ 10-06-2025:
+    - NumPy  
+ [Link](https://youtube.com/live/jhW1S3IQ4bU) 
