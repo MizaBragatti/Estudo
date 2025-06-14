@@ -87,3 +87,11 @@ Dedicado aos estudos
  10-06-2025:
     - NumPy  
  [Link](https://youtube.com/live/jhW1S3IQ4bU) 
+
+ 12-06-2025:
+    - Machine Learning  
+ [Link](https://youtube.com/live/72Ds2f9NWPo) 
+
+ 13-06-2025:
+    - Machine Learning    
+ [Link](https://youtube.com/live/pdnhA8I4tnw)  
