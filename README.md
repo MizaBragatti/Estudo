@@ -115,3 +115,7 @@ Dedicado aos estudos
  18-06-2025:
     - Machine Learning    
  [Link](https://youtube.com/live/zr5GTWhjp30)   
+
+ 19-06-2025:
+    - Machine Learning    
+ [Link](https://youtube.com/live/h8LKHzntszU) 
