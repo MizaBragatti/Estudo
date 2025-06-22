@@ -123,3 +123,7 @@ Dedicado aos estudos
  20-06-2025:
     - requests  
  [Link](https://youtube.com/live/OU23b_qYzHw) 
+
+ 22-06-2025:
+    - Praticando  
+ [Link](https://youtube.com/live/-Qbmadw4M6c) 
