@@ -23,6 +23,7 @@ def ler_frases():
         return []
     try:
         with open(NOME_ARQUIVO, "r", encoding="utf-8") as f:
+            # Garante que as frases são lidas na ordem em que aparecem no arquivo
             return [linha.strip() for linha in f if linha.strip()]
     except Exception as e:
         print(f"Erro ao ler frases: {e}")
@@ -63,3 +64,30 @@ def atualizar_frase(frase_antiga, nova_frase):
         for frase in frases_atuais:
             f.write(frase + "\n")
     return True
+
+def importar_frases_de_arquivo(caminho_arquivo):
+    """
+    Lê frases de um arquivo TXT externo e as adiciona ao arquivo principal.
+    Retorna uma tupla (total_lidas, total_adicionadas, total_duplicadas).
+    """
+    total_lidas = 0
+    total_adicionadas = 0
+    total_duplicadas = 0
+
+    try:
+        with open(caminho_arquivo, "r", encoding="utf-8") as f:
+            for linha in f:
+                total_lidas += 1
+                frase = linha.strip()
+                if frase:
+                    if adicionar_frase(frase):
+                        total_adicionadas += 1
+                    else:
+                        total_duplicadas += 1
+        return total_lidas, total_adicionadas, total_duplicadas
+    except FileNotFoundError:
+        print(f"Erro: Arquivo '{caminho_arquivo}' não encontrado.")
+        return 0, 0, 0
+    except Exception as e:
+        print(f"Erro ao importar frases do arquivo: {e}")
+        return 0, 0, 0
