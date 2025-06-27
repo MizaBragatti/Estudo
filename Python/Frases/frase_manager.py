@@ -1,29 +1,29 @@
 # frase_manager.py
 
 import os
+import sys
 
-NOME_ARQUIVO = "Python/Frases/frases.txt"
+if getattr(sys, 'frozen', False):
+    # Se o script estiver sendo executado como um executável empacotado
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # Se o script estiver sendo executado como um script Python normal
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+NOME_ARQUIVO = os.path.join(BASE_DIR, "frases.txt")
 
 def adicionar_frase(frase):
-    """
-    Adiciona uma nova frase ao arquivo, verificando antes se ela já existe.
-    Retorna True se a frase foi adicionada, False se já existia.
-    """
     frases_atuais = ler_frases()
     if frase in frases_atuais:
-        return False # Frase já existe, não adiciona
-
+        return False
     with open(NOME_ARQUIVO, "a", encoding="utf-8") as f:
         f.write(frase + "\n")
-    return True # Frase adicionada com sucesso
+    return True
 
 def ler_frases():
-    """Lê todas as frases do arquivo e as retorna como uma lista."""
     if not os.path.exists(NOME_ARQUIVO):
         return []
     try:
         with open(NOME_ARQUIVO, "r", encoding="utf-8") as f:
-            # Garante que as frases são lidas na ordem em que aparecem no arquivo
             return [linha.strip() for linha in f if linha.strip()]
     except Exception as e:
         print(f"Erro ao ler frases: {e}")
@@ -33,25 +33,25 @@ def remover_frase(frase_para_remover):
     """
     Remove a primeira ocorrência de uma frase específica do arquivo.
     Reescreve o arquivo com as frases restantes.
+    Retorna True se a frase foi removida, False caso não seja encontrada.
     """
     frases_atuais = ler_frases()
     frases_restantes = []
     removido = False
     for f in frases_atuais:
         if f == frase_para_remover and not removido:
-            removido = True
+            removido = True # Marca que a frase foi encontrada e "removida"
         else:
             frases_restantes.append(f)
 
-    with open(NOME_ARQUIVO, "w", encoding="utf-8") as f:
-        for frase in frases_restantes:
-            f.write(frase + "\n")
+    # Se algo foi removido ou a lista está vazia, reescreve
+    if removido or not frases_atuais: # Adicionei 'or not frases_atuais' para caso o arquivo precise ser reescrito vazio
+        with open(NOME_ARQUIVO, "w", encoding="utf-8") as f:
+            for frase in frases_restantes:
+                f.write(frase + "\n")
+    return removido # Retorna se a frase foi de fato removida
 
 def atualizar_frase(frase_antiga, nova_frase):
-    """
-    Atualiza uma frase existente no arquivo de frases.
-    Substitui a frase antiga pela nova.
-    """
     frases_atuais = ler_frases()
     try:
         index = frases_atuais.index(frase_antiga)
@@ -66,10 +66,6 @@ def atualizar_frase(frase_antiga, nova_frase):
     return True
 
 def importar_frases_de_arquivo(caminho_arquivo):
-    """
-    Lê frases de um arquivo TXT externo e as adiciona ao arquivo principal.
-    Retorna uma tupla (total_lidas, total_adicionadas, total_duplicadas).
-    """
     total_lidas = 0
     total_adicionadas = 0
     total_duplicadas = 0

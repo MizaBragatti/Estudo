@@ -1,17 +1,3 @@
-Nunca perco, ganho ou aprendo.
-Quem é bom em desculpa, não é bom em mais nada.
-Errar sempre, nunca nas mesmas coisas.
-Se eu não tiver o como, vou atrás do quem.
-Acredite no seu potencial e vá além dos seus limites.
-Grandes conquistas começam com pequenos passos.
-O sucesso é a soma de pequenos esforços repetidos diariamente.
-Não desista, o começo é sempre o mais difícil.
-Você é mais forte do que imagina.
-Transforme obstáculos em oportunidades.
-O impossível é apenas uma opinião.
-Sonhe grande, comece pequeno, aja agora.
-A persistência realiza o impossível.
-O fracasso é apenas uma oportunidade para recomeçar com mais experiência.
 Seja a mudança que você deseja ver no mundo.
 Não espere por oportunidades, crie-as.
 Acredite, trabalhe, conquiste.
@@ -52,3 +38,13 @@ Não pare até se sentir orgulhoso.
 O importante é nunca parar de tentar.
 Você é o autor da sua própria história.
 Acredite no seu sonho e faça acontecer.
+Acredite no seu potencial e vá além dos seus limites.
+Grandes conquistas começam com pequenos passos.
+O sucesso é a soma de pequenos esforços repetidos diariamente.
+Não desista, o começo é sempre o mais difícil.
+Você é mais forte do que imagina.
+Transforme obstáculos em oportunidades.
+O impossível é apenas uma opinião.
+Sonhe grande, comece pequeno, aja agora.
+A persistência realiza o impossível.
+O fracasso é apenas uma oportunidade para recomeçar com mais experiência.
