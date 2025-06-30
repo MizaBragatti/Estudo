@@ -37,3 +37,4 @@ Dedicado aos estudos
 | 23-06-2025  | Praticando                                          | [Assistir](https://youtube.com/live/k4vmapK513s)            |
 | 25-06-2025  | Praticando                                          | [Assistir](https://youtube.com/live/QIq31mipmh8)            |
 | 27-06-2025  | Praticando                                          | [Assistir](https://youtube.com/live/NF75U8Bbajs)            |
+| 30-06-2025  | Praticando                                          | [Assistir](https://youtube.com/live/zlJg6lJ4ALM)            |

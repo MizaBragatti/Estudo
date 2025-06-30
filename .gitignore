@@ -6,6 +6,6 @@
 /Python/antigo
 /Robot
 /Ferramentas
-*.exe
-*.db
 *.txt
+*.db
+*.exe

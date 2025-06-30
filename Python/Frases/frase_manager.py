@@ -1,71 +1,103 @@
 # frase_manager.py
 
+import sqlite3
 import os
 import sys
 
+# --- Configuração do Banco de Dados ---
+# Determina o caminho base para o arquivo do banco de dados
 if getattr(sys, 'frozen', False):
-    # Se o script estiver sendo executado como um executável empacotado
+    # Se estiver em um executável PyInstaller, o DB estará ao lado do .exe
     BASE_DIR = os.path.dirname(sys.executable)
 else:
-    # Se o script estiver sendo executado como um script Python normal
+    # Se estiver rodando como um script Python normal, o DB estará na pasta do script
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-NOME_ARQUIVO = os.path.join(BASE_DIR, "frases.txt")
+
+DB_NAME = "frases.db" # Nome do arquivo do banco de dados
+DB_PATH = os.path.join(BASE_DIR, DB_NAME)
+
+def get_db_connection():
+    """Cria e retorna uma conexão com o banco de dados SQLite."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row # Permite acessar colunas por nome
+    return conn
+
+def create_table():
+    """Cria a tabela 'frases' se ela ainda não existir."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS frases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            texto TEXT NOT NULL UNIQUE,
+            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Garante que a tabela seja criada na primeira vez que o módulo é importado/executado
+create_table()
 
 def adicionar_frase(frase):
-    frases_atuais = ler_frases()
-    if frase in frases_atuais:
-        return False
-    with open(NOME_ARQUIVO, "a", encoding="utf-8") as f:
-        f.write(frase + "\n")
-    return True
-
-def ler_frases():
-    if not os.path.exists(NOME_ARQUIVO):
-        return []
+    """Adiciona uma nova frase ao banco de dados."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        with open(NOME_ARQUIVO, "r", encoding="utf-8") as f:
-            return [linha.strip() for linha in f if linha.strip()]
-    except Exception as e:
-        print(f"Erro ao ler frases: {e}")
-        return []
+        cursor.execute("INSERT INTO frases (texto) VALUES (?)", (frase,))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError: # Captura erro de UNIQUE (frase duplicada)
+        return False
+    finally:
+        conn.close()
+
+def ler_frases(ordenacao="original"):
+    """Lê todas as frases do banco de dados com opção de ordenação."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT texto FROM frases"
+    
+    if ordenacao == "alfabetica":
+        query += " ORDER BY texto ASC"
+    elif ordenacao == "alfabetica_inversa":
+        query += " ORDER BY texto DESC"
+    elif ordenacao == "original_inversa":
+        query += " ORDER BY data_criacao DESC"
+    else: # "original" ou qualquer outra coisa
+        query += " ORDER BY data_criacao ASC"
+
+    cursor.execute(query)
+    frases = [row['texto'] for row in cursor.fetchall()]
+    conn.close()
+    return frases
 
 def remover_frase(frase_para_remover):
-    """
-    Remove a primeira ocorrência de uma frase específica do arquivo.
-    Reescreve o arquivo com as frases restantes.
-    Retorna True se a frase foi removida, False caso não seja encontrada.
-    """
-    frases_atuais = ler_frases()
-    frases_restantes = []
-    removido = False
-    for f in frases_atuais:
-        if f == frase_para_remover and not removido:
-            removido = True # Marca que a frase foi encontrada e "removida"
-        else:
-            frases_restantes.append(f)
-
-    # Se algo foi removido ou a lista está vazia, reescreve
-    if removido or not frases_atuais: # Adicionei 'or not frases_atuais' para caso o arquivo precise ser reescrito vazio
-        with open(NOME_ARQUIVO, "w", encoding="utf-8") as f:
-            for frase in frases_restantes:
-                f.write(frase + "\n")
-    return removido # Retorna se a frase foi de fato removida
+    """Remove uma frase do banco de dados."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM frases WHERE texto = ?", (frase_para_remover,))
+    rows_affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return rows_affected > 0
 
 def atualizar_frase(frase_antiga, nova_frase):
-    frases_atuais = ler_frases()
+    """Atualiza uma frase existente no banco de dados."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     try:
-        index = frases_atuais.index(frase_antiga)
-        frases_atuais[index] = nova_frase
-    except ValueError:
-        print(f"Frase '{frase_antiga}' não encontrada no arquivo.")
+        cursor.execute("UPDATE frases SET texto = ? WHERE texto = ?", (nova_frase, frase_antiga))
+        rows_affected = cursor.rowcount
+        conn.commit()
+        return rows_affected > 0
+    except sqlite3.IntegrityError: # Captura erro se a nova_frase já existir
         return False
-
-    with open(NOME_ARQUIVO, "w", encoding="utf-8") as f:
-        for frase in frases_atuais:
-            f.write(frase + "\n")
-    return True
+    finally:
+        conn.close()
 
 def importar_frases_de_arquivo(caminho_arquivo):
+    """Importa frases de um arquivo de texto para o banco de dados."""
     total_lidas = 0
     total_adicionadas = 0
     total_duplicadas = 0
@@ -76,7 +108,7 @@ def importar_frases_de_arquivo(caminho_arquivo):
                 total_lidas += 1
                 frase = linha.strip()
                 if frase:
-                    if adicionar_frase(frase):
+                    if adicionar_frase(frase): # Usa a função de adicionar_frase que já lida com duplicatas
                         total_adicionadas += 1
                     else:
                         total_duplicadas += 1
