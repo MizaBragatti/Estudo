@@ -1,7 +1,11 @@
 https://gemini.google.com/app/5fd65fa294d6b3b0
 
-SQLite
-Modernizar a interface
+#gerar o exe:
+cd Python/Frases
+pyinstaller --onefile --windowed --icon=icone.ico main.py
+
+SQLite - ok
+Modernizar a interface - ok
 Importar Frases de arquivos - ok
 Criar Ordenações - ok
 Criar um executavel - ok
@@ -9,7 +13,10 @@ Mostrar quantidade de frases - ok
 Excluir mais de uma frase, selecionando pela listagem - ok
 Adicionar tempo total dos lembretes
 Permitir redimensionar a tela - ok
-Trocar o icone
+Trocar o icone - ok
 Melhorar a edição - Quando seleciono uma frase para editar e dou 2 cliques em um palavra
 Exclusão está com problema - ok
 Botão para selecionar tudo
+Melhorar os botões, que estão grudados na borda - ok
+Proteger Banco de dados
+Criar Login
