@@ -4,7 +4,7 @@ import tkinter as tk
 import tkinter.messagebox as messagebox
 import tkinter.filedialog as filedialog
 import random
-import frase_manager # <--- Continua importando o frase_manager
+import frase_manager
 import os
 
 class AplicacaoLembretesFrases:
@@ -26,6 +26,7 @@ class AplicacaoLembretesFrases:
         self.intervalo_lembrete_ms = 5000
         self.lembrete_ativo = False
         self.after_id = None
+        self.timeout_after_id = None # <--- NOVO: ID para o agendamento do tempo limite
         self.frase_selecionada_para_edicao = None
         self._after_update_buttons_id = None 
 
@@ -40,73 +41,79 @@ class AplicacaoLembretesFrases:
 
         # Lembrete
         self.label_lembrete = tk.Label(master, text="Clique em 'Iniciar Lembretes' para começar.", wraplength=650, font=("Arial", 12, "italic"), bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND)
-        self.label_lembrete.pack(pady=(15, 10)) # Mais espaço em cima
+        self.label_lembrete.pack(pady=(15, 10))
 
         self.frame_lembrete_config = tk.Frame(master, bg=MODERN_BACKGROUND)
-        self.frame_lembrete_config.pack(pady=(5, 15)) # Mais espaço abaixo do frame
+        self.frame_lembrete_config.pack(pady=(5, 15))
 
         tk.Label(self.frame_lembrete_config, text="Intervalo (segundos):", bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(side=tk.LEFT, padx=5)
         self.entrada_intervalo = tk.Entry(self.frame_lembrete_config, width=10)
         self.entrada_intervalo.insert(0, "5")
-        self.entrada_intervalo.pack(side=tk.LEFT, padx=(0, 10)) # Espaço à direita da entrada
+        self.entrada_intervalo.pack(side=tk.LEFT, padx=(0, 10))
+
+        # <--- NOVO: Campo para Tempo Limite
+        tk.Label(self.frame_lembrete_config, text="Tempo Limite (minutos):", bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(side=tk.LEFT, padx=5)
+        self.entrada_tempo_limite = tk.Entry(self.frame_lembrete_config, width=10)
+        self.entrada_tempo_limite.insert(0, "0") # 0 para sem limite
+        self.entrada_tempo_limite.pack(side=tk.LEFT, padx=(0, 10))
+        # FIM NOVO CAMPO
 
         self.btn_iniciar_lembretes = tk.Button(self.frame_lembrete_config, text="Iniciar Lembretes", command=self.iniciar_lembretes_gui, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG)
-        self.btn_iniciar_lembretes.pack(side=tk.LEFT, padx=(5, 5)) # Espaço entre botões
+        self.btn_iniciar_lembretes.pack(side=tk.LEFT, padx=(5, 5))
 
         self.btn_parar_lembretes = tk.Button(self.frame_lembrete_config, text="Parar Lembretes", command=self.parar_lembretes_gui, state=tk.DISABLED, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG)
-        self.btn_parar_lembretes.pack(side=tk.LEFT, padx=(5, 5)) # Espaço entre botões
+        self.btn_parar_lembretes.pack(side=tk.LEFT, padx=(5, 5))
 
         # Linha separadora
-        tk.Frame(master, height=2, bd=1, relief=tk.SUNKEN, bg="lightgray").pack(fill=tk.X, padx=10, pady=(10, 20)) # Mais espaço abaixo da linha e cor suave
+        tk.Frame(master, height=2, bd=1, relief=tk.SUNKEN, bg="lightgray").pack(fill=tk.X, padx=10, pady=(10, 20))
 
-        tk.Label(master, text="Gerenciamento de Frases", font=("Arial", 14, "bold"), bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(pady=(5, 15)) # Mais espaço abaixo do título
+        tk.Label(master, text="Gerenciamento de Frases", font=("Arial", 14, "bold"), bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(pady=(5, 15))
 
         # Ordenação
         self.frame_ordenacao = tk.Frame(master, bg=MODERN_BACKGROUND)
-        self.frame_ordenacao.pack(pady=(0, 15)) # Espaço abaixo do menu de ordenação
+        self.frame_ordenacao.pack(pady=(0, 15))
         tk.Label(self.frame_ordenacao, text="Ordenar por:", bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(side=tk.LEFT, padx=5)
         self.menu_ordenacao = tk.OptionMenu(self.frame_ordenacao, self.modo_ordenacao, *self.opcoes_ordenacao.keys(), command=self._aplicar_ordenacao)
         self.menu_ordenacao.pack(side=tk.LEFT, padx=5)
 
         # Gerenciamento de frases
         self.frame_gerenciamento = tk.Frame(master, bg=MODERN_BACKGROUND)
-        self.frame_gerenciamento.pack(pady=(10, 0), fill=tk.BOTH, expand=True, padx=15) # Adicionando padx aqui para toda a seção
+        self.frame_gerenciamento.pack(pady=(10, 0), fill=tk.BOTH, expand=True, padx=15)
 
         self.listbox_frases = tk.Listbox(self.frame_gerenciamento, selectmode=tk.EXTENDED, height=10, bg=MODERN_LISTBOX_BG, fg=MODERN_FOREGROUND) 
-        self.listbox_frases.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 20)) # Mais espaço entre listbox e botões
+        self.listbox_frases.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 20))
 
         scrollbar = tk.Scrollbar(self.frame_gerenciamento, orient="vertical", command=self.listbox_frases.yview, bg=MODERN_BACKGROUND) 
-        scrollbar.pack(side=tk.LEFT, fill="y", padx=(0, 0)) # Ajuste leve se necessário para a barra de rolagem
+        scrollbar.pack(side=tk.LEFT, fill="y", padx=(0, 0))
         self.listbox_frases.config(yscrollcommand=scrollbar.set)
 
         frame_botoes_e_entrada_frases = tk.Frame(self.frame_gerenciamento, bg=MODERN_BACKGROUND)
         frame_botoes_e_entrada_frases.pack(side=tk.RIGHT, fill=tk.Y)
 
-        tk.Label(frame_botoes_e_entrada_frases, text="Frase:", bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(pady=(0, 5), anchor='w') # Mais espaço abaixo da label
+        tk.Label(frame_botoes_e_entrada_frases, text="Frase:", bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND).pack(pady=(0, 5), anchor='w')
         self.entrada_frase_gerenciamento = tk.Entry(frame_botoes_e_entrada_frases, width=30)
-        self.entrada_frase_gerenciamento.pack(pady=(0, 15), fill=tk.X) # Mais espaço abaixo da entrada
+        self.entrada_frase_gerenciamento.pack(pady=(0, 15), fill=tk.X)
 
         self.btn_adicionar_da_entrada = tk.Button(frame_botoes_e_entrada_frases, text="Adicionar Frase", command=self.adicionar_frase_da_entrada, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG)
-        self.btn_adicionar_da_entrada.pack(pady=(5, 10), fill=tk.X) # Mais espaço abaixo
+        self.btn_adicionar_da_entrada.pack(pady=(5, 10), fill=tk.X)
 
         self.btn_atualizar = tk.Button(frame_botoes_e_entrada_frases, text="Atualizar Frase", command=self.on_atualizar_selecionado, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG, state=tk.DISABLED)
-        self.btn_atualizar.pack(pady=(5, 10), fill=tk.X) # Mais espaço abaixo
+        self.btn_atualizar.pack(pady=(5, 10), fill=tk.X)
 
         self.btn_excluir = tk.Button(frame_botoes_e_entrada_frases, text="Excluir Frase", command=self.on_excluir_selecionado, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG, state=tk.DISABLED)
-        self.btn_excluir.pack(pady=(5, 20), fill=tk.X) # Mais espaço abaixo e separação do próximo botão
+        self.btn_excluir.pack(pady=(5, 20), fill=tk.X)
 
         btn_importar = tk.Button(frame_botoes_e_entrada_frases, text="Importar Frases do Arquivo", command=self.importar_frases_gui, bg=MODERN_BUTTON_BG, fg=MODERN_BUTTON_FG)
-        btn_importar.pack(pady=(15, 0), fill=tk.X) # Mais espaço acima para separar dos outros botões
+        btn_importar.pack(pady=(15, 0), fill=tk.X)
 
         self.label_total_frases = tk.Label(master, text="Total de Frases: 0", font=("Arial", 10, "bold"), bg=MODERN_BACKGROUND, fg=MODERN_FOREGROUND)
-        self.label_total_frases.pack(pady=(20, 15)) # Mais espaço acima e abaixo
-
+        self.label_total_frases.pack(pady=(20, 15))
+        
         self.listbox_frases.bind('<<ListboxSelect>>', self.on_listbox_selection_change)
         
         self._carregar_e_exibir_frases_inicial() 
 
     def _carregar_e_exibir_frases_inicial(self):
-        # Não precisamos mais carregar self.frases aqui, pois ler_frases() faz isso
         self.frase_selecionada_para_edicao = None 
         self.entrada_frase_gerenciamento.delete(0, tk.END) 
         
@@ -114,13 +121,12 @@ class AplicacaoLembretesFrases:
 
     def _aplicar_ordenacao(self, *args):
         modo_db = self.opcoes_ordenacao[self.modo_ordenacao.get()]
-        # Chama ler_frases passando o modo de ordenação para o DB
         self.frases = frase_manager.ler_frases(ordenacao=modo_db) 
         self._recarregar_listbox_com_frases_ordenadas() 
 
     def _recarregar_listbox_com_frases_ordenadas(self):
         self.listbox_frases.delete(0, tk.END)
-        if self.frases: # self.frases já foi populado por frase_manager.ler_frases()
+        if self.frases: 
             for i, frase in enumerate(self.frases):
                 self.listbox_frases.insert(tk.END, f"{i+1}. {frase}")
         else:
@@ -149,7 +155,7 @@ class AplicacaoLembretesFrases:
             self.entrada_frase_gerenciamento.delete(0, tk.END)
             self.entrada_frase_gerenciamento.insert(0, frase_limpa)
             self.frase_selecionada_para_edicao = frase_limpa
-        else: # Múltiplas seleções de itens
+        else: 
             self.btn_adicionar_da_entrada.config(state=tk.DISABLED)
             self.btn_atualizar.config(state=tk.DISABLED)
             self.btn_excluir.config(state=tk.NORMAL)
@@ -206,7 +212,6 @@ class AplicacaoLembretesFrases:
             self._carregar_e_exibir_frases_inicial() 
             self.label_lembrete.config(text=f"{frases_excluidas_count} frase(s) excluída(s) com sucesso!")
             
-            # Ajuste aqui: agora lemos do DB para verificar se há frases
             if not frase_manager.ler_frases() and self.lembrete_ativo:
                 self.parar_lembretes_gui()
                 self.label_lembrete.config(text="Todas as frases foram excluídas. Lembretes parados.")
@@ -227,21 +232,16 @@ class AplicacaoLembretesFrases:
             messagebox.showinfo("Nenhuma Mudança", "A nova frase é idêntica à frase original. Nenhuma atualização realizada.")
             return
             
-        # Não precisamos mais ler todas as frases para verificar duplicidade aqui
-        # A função atualizar_frase do frase_manager já lida com isso.
-        
         if messagebox.askyesno("Confirmar Atualização", f"Deseja atualizar '{frase_antiga}' para '{nova_frase}'?"):
             if frase_manager.atualizar_frase(frase_antiga, nova_frase):
                 self.label_lembrete.config(text=f"Frase atualizada para:\n'{nova_frase}'")
                 self._carregar_e_exibir_frases_inicial()
             else:
-                # Se retornar False, pode ser porque a nova_frase já existe
                 messagebox.showwarning("Atualização Falhou", f"Não foi possível atualizar a frase para '{nova_frase}'. Talvez a frase já exista.")
                 self.label_lembrete.config(text=f"Atualização falhou para '{nova_frase}'.")
         else:
             self.label_lembrete.config(text="Atualização de frase cancelada.")
         
-
     def iniciar_lembretes_gui(self):
         if self.lembrete_ativo:
             self.label_lembrete.config(text="Lembretes já estão ativos.")
@@ -256,8 +256,18 @@ class AplicacaoLembretesFrases:
         except ValueError:
             self.label_lembrete.config(text="Por favor, digite um número válido para o intervalo.")
             return
+        
+        # <--- NOVO: Obter e validar o tempo limite
+        try:
+            tempo_limite_minutos = float(self.entrada_tempo_limite.get())
+            if tempo_limite_minutos < 0:
+                self.label_lembrete.config(text="O tempo limite deve ser um número positivo ou zero para sem limite.")
+                return
+        except ValueError:
+            self.label_lembrete.config(text="Por favor, digite um número válido para o tempo limite.")
+            return
+        # FIM NOVO
 
-        # Agora lê as frases do DB
         frases_do_db = frase_manager.ler_frases()
         if not frases_do_db:
             self.label_lembrete.config(text="Nenhuma frase cadastrada para iniciar os lembretes.")
@@ -266,7 +276,16 @@ class AplicacaoLembretesFrases:
         self.lembrete_ativo = True
         self.btn_iniciar_lembretes.config(state=tk.DISABLED)
         self.btn_parar_lembretes.config(state=tk.NORMAL)
-        self.label_lembrete.config(text=f"Lembretes iniciados! A cada {intervalo_segundos} segundos. Selecione uma frase para gerenciar.")
+        
+        # <--- NOVO: Agendar a parada dos lembretes se houver tempo limite
+        if tempo_limite_minutos > 0:
+            tempo_limite_ms = int(tempo_limite_minutos * 60 * 1000)
+            self.timeout_after_id = self.master.after(tempo_limite_ms, self.parar_lembretes_gui)
+            self.label_lembrete.config(text=f"Lembretes iniciados! A cada {intervalo_segundos} segundos, por {tempo_limite_minutos} minuto(s).")
+        else:
+            self.label_lembrete.config(text=f"Lembretes iniciados! A cada {intervalo_segundos} segundos (sem tempo limite).")
+        # FIM NOVO
+
         self._mostrar_lembrete_aleatorio()
 
     def parar_lembretes_gui(self):
@@ -277,6 +296,12 @@ class AplicacaoLembretesFrases:
         if self.after_id:
             self.master.after_cancel(self.after_id)
             self.after_id = None
+        
+        # <--- NOVO: Cancelar o agendamento do tempo limite, se existir
+        if self.timeout_after_id:
+            self.master.after_cancel(self.timeout_after_id)
+            self.timeout_after_id = None
+        # FIM NOVO
 
         self.lembrete_ativo = False
         self.btn_iniciar_lembretes.config(state=tk.NORMAL)
@@ -284,16 +309,19 @@ class AplicacaoLembretesFrases:
         self.label_lembrete.config(text="Lembretes parados.")
 
     def _mostrar_lembrete_aleatorio(self):
-        # Sempre lê as frases do DB para garantir que esteja atualizado
+        if not self.lembrete_ativo: # Garantir que não continue se já parou
+            return
+
         frases_atuais = frase_manager.ler_frases() 
         if not frases_atuais:
             self.label_lembrete.config(text="Nenhuma frase para lembrar. Parando lembretes.")
             self.parar_lembretes_gui()
             return
 
-        frase_escolhida = random.choice(frases_atuais) # Escolhe de frases_atuais
+        frase_escolhida = random.choice(frases_atuais) 
         self.label_lembrete.config(text=f"**Lembrete:** \"{frase_escolhida}\"")
 
+        # Verifica novamente se ainda está ativo antes de agendar o próximo
         if self.lembrete_ativo:
             self.after_id = self.master.after(self.intervalo_lembrete_ms, self._mostrar_lembrete_aleatorio)
 
