@@ -3,6 +3,7 @@
 import sqlite3
 import os
 import sys
+import hashlib # Para hash de senhas
 
 # --- Configuração do Banco de Dados ---
 # Determina o caminho base para o arquivo do banco de dados
@@ -21,6 +22,8 @@ def get_db_connection():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row # Permite acessar colunas por nome
     return conn
+
+# --- Funções de Gerenciamento de Frases (Mantenha as existentes) ---
 
 def create_table():
     """Cria a tabela 'frases' se ela ainda não existir."""
@@ -119,3 +122,65 @@ def importar_frases_de_arquivo(caminho_arquivo):
     except Exception as e:
         print(f"Erro ao importar frases do arquivo: {e}")
         return 0, 0, 0
+
+
+# --- Funções de Gerenciamento de Usuários (NOVAS) ---
+
+def hash_password(password):
+    """Gera o hash SHA256 de uma senha."""
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+def create_users_table():
+    """Cria a tabela 'users' se ela ainda não existir."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT NOT NULL UNIQUE,
+            password_hash TEXT NOT NULL
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Garante que a tabela de usuários também seja criada
+create_users_table()
+
+def register_user(username, password):
+    """
+    Tenta registrar um novo usuário.
+    Retorna True em caso de sucesso, False se o usuário já existir.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        hashed_password = hash_password(password)
+        cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, hashed_password))
+        conn.commit()
+        return True
+    except sqlite3.IntegrityError: # Usuário já existe
+        return False
+    finally:
+        conn.close()
+
+def authenticate_user(username, password):
+    """
+    Autentica um usuário.
+    Retorna True se as credenciais estiverem corretas, False caso contrário.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT password_hash FROM users WHERE username = ?", (username,))
+    record = cursor.fetchone()
+    conn.close()
+
+    if record:
+        stored_password_hash = record['password_hash']
+        provided_password_hash = hash_password(password)
+        return stored_password_hash == provided_password_hash
+    return False
+
+# --- Inicialização no módulo ---
+create_table() # Garante que a tabela de frases exista
+create_users_table() # Garante que a tabela de usuários exista

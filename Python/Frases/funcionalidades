@@ -19,5 +19,12 @@ Exclusão está com problema - ok
 Botão para selecionar tudo
 Melhorar os botões, que estão grudados na borda - ok
 Proteger Banco de dados
-Criar Login
-Tkinter - Flet 
+Criar Login - ok
+Tkinter - Flet - ok
+Alterar o botões, pois não estão mostrando direito se estão ativos ou não
+Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção
+Está rolando sozinho as frases, quando ativo lembrete
+Não está retornando erro de usuário inválido
+Desabilitar os campos de tempo do lembrete, quando iniciado
+Não está atualizando as frases
+Os botões de edição de frases não estão funcionando
