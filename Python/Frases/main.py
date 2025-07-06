@@ -101,9 +101,10 @@ class PhraseManagerApp:
 
         # Management Section
         self.phrase_input = ft.TextField(
-            label="Frase", expand=True, multiline=True, min_lines=1, max_lines=3
+            label="Frase", expand=True, multiline=True, min_lines=1, max_lines=3,
+            on_change=lambda e: self._update_button_states(), # Se já não estiver lá
         )
-        
+
         self.add_button = ft.ElevatedButton(
             "Adicionar Frase",
             on_click=self.add_phrase_from_input,
@@ -113,7 +114,7 @@ class PhraseManagerApp:
         )
         self.update_button = ft.ElevatedButton(
             "Atualizar Frase",
-            on_click=self.on_update_selected,
+            on_click=lambda e: asyncio.run(self.on_update_selected(e)),
             disabled=True,
             bgcolor=ACCENT_COLOR,
             color=ft.Colors.WHITE,
@@ -244,22 +245,39 @@ class PhraseManagerApp:
         self.frase_selecionada_para_edicao = phrase_text
         self.phrase_input.update()
         self._update_button_states()
+        print(f"DEBUG: Frase selecionada para edição: '{self.frase_selecionada_para_edicao}'") # <-- ADICIONE ESTA LINHA
 
     def _update_button_states(self):
+        # Verifica se há alguma frase selecionada na lista para edição
         has_selection = bool(self.frase_selecionada_para_edicao)
+        
+        # Verifica se há texto no campo de entrada (removendo espaços em branco extras)
         input_has_text = bool(self.phrase_input.value.strip())
 
+        # Lógica para o botão ADICIONAR
+        # Ele deve estar habilitado SE:
+        # 1. Não houver seleção de frase (você está criando uma nova) E
+        # 2. Houver texto digitado no campo de entrada.
         self.add_button.disabled = has_selection or not input_has_text
+        # Se 'has_selection' for True, 'add_button.disabled' será True.
+        # Se 'input_has_text' for False, 'add_button.disabled' será True.
+        # Ele só será False (habilitado) se ambos 'has_selection' for False E 'input_has_text' for True.
+
+        # Lógica para o botão ATUALIZAR
+        # Ele deve estar habilitado SE:
+        # 1. Houver uma frase selecionada E
+        # 2. Houver texto no campo de entrada (para atualizar para algo).
         self.update_button.disabled = not has_selection or not input_has_text
+
+        # Lógica para o botão EXCLUIR
+        # Ele deve estar habilitado SE:
+        # 1. Houver uma frase selecionada.
         self.delete_button.disabled = not has_selection
         
-        if has_selection:
-            self.add_button.disabled = True
-        elif input_has_text:
-            self.add_button.disabled = False
-        else:
-            self.add_button.disabled = True
+        # O botão Importar geralmente fica sempre habilitado
+        # self.import_button.disabled = False # Descomente se precisar controlar
 
+        # ATUALIZA A INTERFACE para que as mudanças nos botões sejam visíveis
         self.page.update()
 
     def add_phrase_from_input(self, e):
@@ -267,7 +285,7 @@ class PhraseManagerApp:
         if new_phrase:
             if frase_manager.adicionar_frase(new_phrase):
                 self.label_lembrete.value = f"Frase '{new_phrase}' adicionada com sucesso!"
-                self.phrase_input.value = ""
+                self.phrase_input.value = "" # Limpa o campo
             else:
                 self.page.snack_bar.content = ft.Text(f"A frase '{new_phrase}' já existe na lista.", color=ft.Colors.WHITE)
                 self.page.snack_bar.open = True
@@ -276,8 +294,9 @@ class PhraseManagerApp:
             self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
         
-        self.page.update()
-        self._load_and_display_phrases_initial()
+        # Estas duas linhas são cruciais e parecem estar corretas no seu código
+        self.page.update() # Atualiza a UI para mostrar a snackbar e o label
+        self._load_and_display_phrases_initial() # Recarrega a lista e atualiza o estado dos botões
 
     def on_delete_selected(self, e):
         phrase_to_delete = self.frase_selecionada_para_edicao
@@ -288,7 +307,6 @@ class PhraseManagerApp:
             self.page.update()
             return
         
-        # Flet não tem um messagebox.askyesno, então usamos um AlertDialog para confirmação
         def close_dlg(e):
             self.page.dialog.open = False
             self.page.update()
@@ -298,14 +316,18 @@ class PhraseManagerApp:
             self.page.update()
             if frase_manager.remover_frase(phrase_to_delete):
                 self.label_lembrete.value = f"Frase '{phrase_to_delete}' excluída com sucesso!"
+                self.frase_selecionada_para_edicao = None # Limpa a seleção
+                self.phrase_input.value = "" # Limpa o campo de entrada
+                self.phrase_input.update() # Atualiza o campo
             else:
                 self.label_lembrete.value = f"Erro ao excluir a frase '{phrase_to_delete}'."
             
-            self.page.update()
-            self._load_and_display_phrases_initial()
+            self.page.update() # Atualiza a UI com a mensagem no label_lembrete
+            self._load_and_display_phrases_initial() # Recarrega a lista e atualiza o estado dos botões
             
+            # Verifica se não há mais frases e se os lembretes estão ativos para parar
             if not frase_manager.ler_frases() and self.lembrete_ativo:
-                self.stop_reminders_gui(None)
+                self.stop_reminders_gui(None) # Use o handler de evento direto, ou faça um await se for async
                 self.label_lembrete.value = "Todas as frases foram excluídas. Lembretes parados."
                 self.page.update()
 
@@ -321,47 +343,63 @@ class PhraseManagerApp:
         )
         self.page.dialog.open = True
         self.page.update()
+        # Removido self._load_and_display_phrases_initial() daqui, pois deve ser chamado APÓS a exclusão.
 
 
-    def on_update_selected(self, e):
+    async def on_update_selected(self, e):
         old_phrase = self.frase_selecionada_para_edicao
         new_phrase = self.phrase_input.value.strip()
+
+        print(f"DEBUG: on_update_selected - Início. Selecionada: '{old_phrase}', Input: '{new_phrase}'")
 
         if old_phrase is None:
             self.page.snack_bar.content = ft.Text("Nenhuma frase selecionada para atualização.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
+            print("DEBUG: on_update_selected - Nenhuma frase selecionada. Retornando.")
             return
 
         if not new_phrase:
             self.page.snack_bar.content = ft.Text("O campo de frase para atualização não pode estar vazio.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
+            print("DEBUG: on_update_selected - Campo de frase vazio. Retornando.")
             return
 
         if new_phrase == old_phrase:
             self.page.snack_bar.content = ft.Text("A nova frase é idêntica à frase original. Nenhuma atualização realizada.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
+            print("DEBUG: on_update_selected - Frase idêntica. Retornando.")
             return
             
         def close_dlg(e):
             self.page.dialog.open = False
             self.page.update()
+            print("DEBUG: close_dlg - AlertDialog fechado.")
 
         def confirm_update(e):
             self.page.dialog.open = False
             self.page.update()
+            print("DEBUG: confirm_update - Clicou em Sim. Dialogo fechado.")
+            
+            # >>> LÓGICA PRINCIPAL DE ATUALIZAÇÃO ADICIONADA AQUI <<<
             if frase_manager.atualizar_frase(old_phrase, new_phrase):
                 self.label_lembrete.value = f"Frase atualizada para:\n'{new_phrase}'"
+                self.frase_selecionada_para_edicao = None # Limpa a seleção
+                self.phrase_input.value = "" # Limpa o campo de entrada
+                self.phrase_input.update() # Atualiza o campo para refletir que ele está vazio
+                print("DEBUG: frase_manager.atualizar_frase retornou True (SUCESSO)")
             else:
                 self.page.snack_bar.content = ft.Text(f"Não foi possível atualizar a frase para '{new_phrase}'. Talvez a frase já exista.", color=ft.Colors.WHITE)
                 self.page.snack_bar.open = True
                 self.label_lembrete.value = f"Atualização falhou para '{new_phrase}'."
+                print("DEBUG: frase_manager.atualizar_frase retornou False (FALHA)")
             
-            self.page.update()
-            self._load_and_display_phrases_initial()
+            self.page.update() # Atualiza a UI com a mensagem no label_lembrete ou snackbar
+            self._load_and_display_phrases_initial() # Recarrega a lista e atualiza o estado dos botões
         
+        # >>> SOMENTE UM BLOCO DE AlertDialog AQUI <<<
         self.page.dialog = ft.AlertDialog(
             modal=True,
             title=ft.Text("Confirmar Atualização"),
@@ -372,8 +410,9 @@ class PhraseManagerApp:
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        self.page.dialog.open = True
-        self.page.update()
+        self.page.dialog.open = True # Abre o diálogo
+        self.page.update() # Renderiza o diálogo na tela
+        print("DEBUG: AlertDialog configurado e page.update() chamado para abrir.")
 
 
     async def start_reminders_gui(self, e):
@@ -433,7 +472,7 @@ class PhraseManagerApp:
             
             # ATENÇÃO AQUI: Mudança na forma de iniciar a tarefa de tempo limite
             # Removendo self.page.run_task e usando asyncio.create_task diretamente
-            self.timeout_task = asyncio.create_task(stop_after_timeout_task())
+            self.timeout_task = asyncio.run(stop_after_timeout_task())
             
             self.label_lembrete.value = f"Lembretes iniciados! A cada {interval_seconds} segundos, por {timeout_minutes} minuto(s)."
         else:
@@ -443,7 +482,7 @@ class PhraseManagerApp:
         
         # Iniciar a tarefa de exibição de lembretes
         #self.current_reminder_task = self.page.run_task(self._show_random_reminder_loop())
-        self.current_reminder_task = asyncio.create_task(self._show_random_reminder_loop())
+        self.current_reminder_task = asyncio.run(self._show_random_reminder_loop())
 
 
     async def stop_reminders_gui(self, e): # Continua sendo o handler de click do botão
@@ -614,11 +653,13 @@ def main(page: ft.Page):
     frase_manager.create_table()
     frase_manager.create_users_table()
 
-    def on_login_success():
-        page.clean()
-        PhraseManagerApp(page)
+    # def on_login_success():
+    #     page.clean()
+    #     PhraseManagerApp(page)
 
-    LoginScreen(page, on_login_success)
+    # LoginScreen(page, on_login_success)
+    page.clean() # Limpa a página antes de adicionar o novo conteúdo
+    PhraseManagerApp(page) # Inicia diretamente o aplicativo de gerenciamento de frases
 
 # Inicia o aplicativo Flet
 if __name__ == "__main__":
