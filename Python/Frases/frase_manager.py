@@ -85,18 +85,18 @@ def remover_frase(frase_para_remover):
     conn.close()
     return rows_affected > 0
 
-def atualizar_frase(old_phrase, new_phrase):
+def atualizar_frase(old_texto, new_texto):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         # Primeiro, verifica se a nova frase já existe para evitar duplicatas
-        cursor.execute("SELECT COUNT(*) FROM phrases WHERE phrase = ?", (new_phrase,))
-        if cursor.fetchone()[0] > 0 and new_phrase != old_phrase:
+        cursor.execute("SELECT COUNT(*) FROM frases WHERE texto = ?", (new_texto,))
+        if cursor.fetchone()[0] > 0 and new_texto != old_texto:
             # Se a nova frase já existe e é diferente da antiga, não permite a atualização
             return False 
 
         # Atualiza a frase no banco de dados
-        cursor.execute("UPDATE phrases SET phrase = ? WHERE phrase = ?", (new_phrase, old_phrase))
+        cursor.execute("UPDATE frases SET texto = ? WHERE texto = ?", (new_texto, old_texto))
         conn.commit()
         return True
     except sqlite3.Error as e:
