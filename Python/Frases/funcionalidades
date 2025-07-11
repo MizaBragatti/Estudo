@@ -21,11 +21,11 @@ Melhorar os botões, que estão grudados na borda - ok
 Proteger Banco de dados
 Criar Login - ok
 Tkinter - Flet - ok
-Alterar o botões, pois não estão mostrando direito se estão ativos ou não
+Alterar o botões, pois não estão mostrando direito se estão ativos ou não - ok
 Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção
 Está rolando sozinho as frases, quando ativo lembrete
 Não está retornando erro de usuário inválido
 Desabilitar os campos de tempo do lembrete, quando iniciado
-Não está atualizando as frases
 Os botões de edição de frases não estão funcionando
 Não está retornando erro de duplicidade
+Adicionar Frase não está desabilitando

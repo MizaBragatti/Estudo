@@ -458,10 +458,54 @@ class PhraseManagerApp:
             await asyncio.sleep(self.intervalo_lembrete_ms / 1000)
 
     def import_phrases_gui(self, e):
-        self.page.snack_bar.content = ft.Text("Importação de arquivo requer funcionalidades mais avançadas do Flet (FilePicker).", color=ft.Colors.WHITE)
-        self.page.snack_bar.open = True
+        # Cria um FilePicker para seleção de arquivo
+        def on_file_picked(e: ft.FilePickerResultEvent):
+            if e.files:
+                file_path = e.files[0].path
+                self._import_phrases_from_file(file_path)
+            else:
+                self.page.snack_bar.content = ft.Text("Nenhum arquivo selecionado.", color=ft.Colors.WHITE)
+                self.page.snack_bar.open = True
+                self.page.update()
+
+        file_picker = ft.FilePicker(on_result=on_file_picked)
+        self.page.overlay.append(file_picker)
         self.page.update()
-        return
+        
+        # Abre o diálogo de seleção de arquivo
+        file_picker.pick_files(
+            dialog_title="Selecione um arquivo de texto com frases",
+            file_type=ft.FilePickerFileType.CUSTOM,
+            allowed_extensions=["txt"]
+        )
+
+    def _import_phrases_from_file(self, file_path):
+        """Importa frases de um arquivo de texto."""
+        try:
+            total_lidas, total_adicionadas, total_duplicadas = frase_manager.importar_frases_de_arquivo(file_path)
+            
+            if total_lidas == 0:
+                self.label_lembrete.value = "Nenhuma linha encontrada no arquivo."
+            else:
+                self.label_lembrete.value = f"Importação concluída! {total_adicionadas} frases adicionadas, {total_duplicadas} duplicadas ignoradas."
+                
+            self.page.snack_bar.content = ft.Text(
+                f"Total de linhas lidas: {total_lidas}\n"
+                f"Frases adicionadas: {total_adicionadas}\n"
+                f"Frases duplicadas ignoradas: {total_duplicadas}", 
+                color=ft.Colors.WHITE
+            )
+            self.page.snack_bar.open = True
+            self.page.update()
+            
+            # Recarrega a lista de frases
+            self._load_and_display_phrases_initial()
+            
+        except Exception as ex:
+            self.label_lembrete.value = f"Erro durante a importação: {str(ex)}"
+            self.page.snack_bar.content = ft.Text(f"Erro: {str(ex)}", color=ft.Colors.WHITE)
+            self.page.snack_bar.open = True
+            self.page.update()
 
 # --- Classe da Tela de Login para Flet ---
 class LoginScreen:
