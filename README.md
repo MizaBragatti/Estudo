@@ -44,3 +44,5 @@ Dedicado aos estudos
 | 06-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/iZxLxSWZsXc)            |
 | 08-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/fgcr5EHM9Cc)            |
 | 09-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/_2Ux6x4w6wA)            |
+| 11-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/LZeVmbbIHD4)            |
+| 12-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/ENLp3r0WQpI)            |
