@@ -23,7 +23,7 @@ Criar Login - ok
 Tkinter - Flet - ok
 Alterar o botões, pois não estão mostrando direito se estão ativos ou não - ok
 Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção
-Está rolando sozinho as frases, quando ativo lembrete
+Está rolando sozinho as frases, quando ativo lembrete - ok
 Não está retornando erro de usuário inválido
 Desabilitar os campos de tempo do lembrete, quando iniciado
 Os botões de edição de frases não estão funcionando
@@ -31,3 +31,4 @@ Não está retornando erro de duplicidade - ok
 Adicionar Frase não está desabilitando - ok
 Exportar frases
 Remover todos debugs
+Acrescentar busca de frases

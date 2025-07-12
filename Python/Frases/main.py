@@ -140,7 +140,7 @@ class PhraseManagerApp:
         )
 
         self.list_view = ft.ListView(
-            expand=1, padding=10, auto_scroll=True,
+            expand=1, padding=10, auto_scroll=False,
             spacing=5
         )
         self.total_phrases_text = ft.Text("Total de Frases: 0", weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
@@ -246,12 +246,10 @@ class PhraseManagerApp:
     def add_phrase_from_input(self, e):
         new_phrase = self.phrase_input.value.strip()
         if new_phrase:
-            # Debug: Verifica se a frase já existe antes de tentar adicionar
+            # Verifica se a frase já existe antes de tentar adicionar
             existing_phrases = frase_manager.ler_frases()
-            print(f"DEBUG: Verificando frase '{new_phrase}' contra {len(existing_phrases)} frases existentes")
             
             if new_phrase in existing_phrases:
-                print(f"DEBUG: Frase '{new_phrase}' já existe na lista")
                 self._show_duplicate_phrase_alert(new_phrase)
                 return
             
@@ -262,7 +260,6 @@ class PhraseManagerApp:
                 self.page.update()
                 self._load_and_display_phrases_initial()
             else:
-                print(f"DEBUG: adicionar_frase retornou False para '{new_phrase}'")
                 self._show_duplicate_phrase_alert(new_phrase)
         else:
             self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
@@ -271,9 +268,11 @@ class PhraseManagerApp:
 
     def _show_duplicate_phrase_alert(self, duplicate_phrase):
         """Exibe um alerta quando uma frase duplicada é detectada."""
-        print(f"DEBUG: Mostrando alerta para frase duplicada: '{duplicate_phrase}'")
         
-        # Primeiro, mostra uma snack bar como backup
+        # Primeiro, destaca a frase duplicada na lista
+        self._highlight_duplicate_phrase_in_list(duplicate_phrase)
+        
+        # Mostra uma snack bar como backup
         self.page.snack_bar.content = ft.Text(
             f"ATENÇÃO: A frase '{duplicate_phrase}' já existe na lista!", 
             color=ft.Colors.WHITE
@@ -284,11 +283,12 @@ class PhraseManagerApp:
         
         # Cria um overlay modal customizado
         def close_overlay(e):
-            print("DEBUG: Fechando overlay de duplicata")
             # Remove o overlay da página
             if hasattr(self, 'duplicate_overlay') and self.duplicate_overlay in self.page.overlay:
                 self.page.overlay.remove(self.duplicate_overlay)
                 self.page.update()
+            # Remove o destaque da lista após fechar o modal
+            self._remove_highlight_from_list()
 
         # Container principal do modal - responsivo
         modal_width = min(450, self.page.window_width * 0.8)
@@ -323,7 +323,8 @@ class PhraseManagerApp:
                                     content=ft.Text(
                                         f"A frase abaixo já existe na sua lista:\n\n"
                                         f"'{duplicate_phrase}'\n\n"
-                                        f"Por favor, digite uma frase diferente ou edite a frase existente.",
+                                        f"🔍 Veja a frase destacada em laranja na lista ao lado.\n"
+                                        f"Digite uma frase diferente ou edite a existente.",
                                         text_align=ft.TextAlign.CENTER,
                                         color=ft.Colors.GREY_700,
                                         size=14,
@@ -370,15 +371,81 @@ class PhraseManagerApp:
             expand=True
         )
         
-        print("DEBUG: Criando overlay modal responsivo")
         self.duplicate_overlay = modal_content
         self.page.overlay.append(self.duplicate_overlay)
-        print("DEBUG: Overlay adicionado, atualizando página")
         self.page.update()
         
         # Também atualiza o label_lembrete para dar feedback visual adicional
-        self.label_lembrete.value = f"❌ Frase '{duplicate_phrase}' já existe! Digite uma diferente."
+        self.label_lembrete.value = f"❌ Frase '{duplicate_phrase}' já existe! Veja destaque na lista."
         self.label_lembrete.color = ft.Colors.RED_600
+
+    def _highlight_duplicate_phrase_in_list(self, duplicate_phrase):
+        """Destaca a frase duplicada na lista com cor laranja."""
+        
+        # Encontra o índice da frase duplicada
+        duplicate_index = -1
+        
+        # Recarrega a lista com destaque
+        self.list_view.controls.clear()
+        if self.phrases_data:
+            for i, phrase in enumerate(self.phrases_data):
+                # Verifica se é a frase duplicada
+                is_duplicate = phrase == duplicate_phrase
+                if is_duplicate:
+                    duplicate_index = i
+                
+                item_text = ft.Text(
+                    f"{i+1}. {phrase}", 
+                    color=ft.Colors.WHITE if is_duplicate else TEXT_COLOR,
+                    weight=ft.FontWeight.BOLD if is_duplicate else ft.FontWeight.NORMAL
+                )
+                
+                list_tile = ft.ListTile(
+                    title=item_text,
+                    on_click=lambda e, p=phrase: self._on_list_item_select(e, p),
+                    hover_color=ft.Colors.BLUE_50,
+                    bgcolor=ft.Colors.ORANGE_600 if is_duplicate else None,
+                    shape=ft.RoundedRectangleBorder(radius=8) if is_duplicate else None
+                )
+                self.list_view.controls.append(list_tile)
+        else:
+            self.list_view.controls.append(ft.Text("Nenhuma frase cadastrada ainda.", color=TEXT_COLOR))
+        
+        self.page.update()
+        
+        # Rola até a frase duplicada usando uma abordagem mais simples
+        if duplicate_index >= 0:
+            self._scroll_to_duplicate_item(duplicate_index)
+
+    def _scroll_to_duplicate_item(self, duplicate_index):
+        """Rola para a frase duplicada usando um timer simples."""
+        try:
+            # Calcula a posição aproximada do item (altura estimada por item)
+            estimated_item_height = 60  # Altura estimada de cada ListTile
+            scroll_position = duplicate_index * estimated_item_height
+            
+            # Ajusta para centralizar o item na view
+            visible_height = 300  # Altura estimada da área visível da lista
+            centered_position = max(0, scroll_position - (visible_height / 2))
+            
+            # Usa um timer simples para fazer o scroll após um pequeno delay
+            def do_scroll():
+                try:
+                    self.list_view.scroll_to(offset=centered_position, duration=500)
+                except Exception as e:
+                    pass
+            
+            # Agenda o scroll para ser executado após 100ms
+            import threading
+            timer = threading.Timer(0.1, do_scroll)
+            timer.start()
+            
+        except Exception as e:
+            pass
+
+    def _remove_highlight_from_list(self):
+        """Remove o destaque da lista, voltando ao estado normal."""
+        self._reload_list_view_with_sorted_phrases()
 
     def on_delete_selected(self, e):
         phrase_to_delete = self.frase_selecionada_para_edicao
