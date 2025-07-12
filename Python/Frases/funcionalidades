@@ -27,5 +27,7 @@ Está rolando sozinho as frases, quando ativo lembrete
 Não está retornando erro de usuário inválido
 Desabilitar os campos de tempo do lembrete, quando iniciado
 Os botões de edição de frases não estão funcionando
-Não está retornando erro de duplicidade
-Adicionar Frase não está desabilitando
+Não está retornando erro de duplicidade - ok
+Adicionar Frase não está desabilitando - ok
+Exportar frases
+Remover todos debugs

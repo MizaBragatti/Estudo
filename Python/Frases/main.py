@@ -231,26 +231,154 @@ class PhraseManagerApp:
     def _update_button_states(self):
         has_selection = bool(self.frase_selecionada_para_edicao)
         input_has_text = bool(self.phrase_input.value.strip())
-        self.add_button.disabled = has_selection or not input_has_text
+        
+        # Botão Adicionar: habilitado apenas quando há texto no input (independente de seleção)
+        self.add_button.disabled = not input_has_text
+        
+        # Botão Atualizar: habilitado quando há seleção E há texto no input
         self.update_button.disabled = not has_selection or not input_has_text
+        
+        # Botão Excluir: habilitado apenas quando há seleção
         self.delete_button.disabled = not has_selection
+        
         self.page.update()
 
     def add_phrase_from_input(self, e):
         new_phrase = self.phrase_input.value.strip()
         if new_phrase:
+            # Debug: Verifica se a frase já existe antes de tentar adicionar
+            existing_phrases = frase_manager.ler_frases()
+            print(f"DEBUG: Verificando frase '{new_phrase}' contra {len(existing_phrases)} frases existentes")
+            
+            if new_phrase in existing_phrases:
+                print(f"DEBUG: Frase '{new_phrase}' já existe na lista")
+                self._show_duplicate_phrase_alert(new_phrase)
+                return
+            
             if frase_manager.adicionar_frase(new_phrase):
-                self.label_lembrete.value = f"Frase '{new_phrase}' adicionada com sucesso!"
+                self.label_lembrete.value = f"✅ Frase '{new_phrase}' adicionada com sucesso!"
+                self.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.phrase_input.value = ""
+                self.page.update()
+                self._load_and_display_phrases_initial()
             else:
-                self.page.snack_bar.content = ft.Text(f"A frase '{new_phrase}' já existe na lista.", color=ft.Colors.WHITE)
-                self.page.snack_bar.open = True
-                self.label_lembrete.value = f"Frase '{new_phrase}' já existe."
+                print(f"DEBUG: adicionar_frase retornou False para '{new_phrase}'")
+                self._show_duplicate_phrase_alert(new_phrase)
         else:
             self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
+            self.page.update()
+
+    def _show_duplicate_phrase_alert(self, duplicate_phrase):
+        """Exibe um alerta quando uma frase duplicada é detectada."""
+        print(f"DEBUG: Mostrando alerta para frase duplicada: '{duplicate_phrase}'")
+        
+        # Primeiro, mostra uma snack bar como backup
+        self.page.snack_bar.content = ft.Text(
+            f"ATENÇÃO: A frase '{duplicate_phrase}' já existe na lista!", 
+            color=ft.Colors.WHITE
+        )
+        self.page.snack_bar.bgcolor = ft.Colors.ORANGE_700
+        self.page.snack_bar.open = True
         self.page.update()
-        self._load_and_display_phrases_initial()
+        
+        # Cria um overlay modal customizado
+        def close_overlay(e):
+            print("DEBUG: Fechando overlay de duplicata")
+            # Remove o overlay da página
+            if hasattr(self, 'duplicate_overlay') and self.duplicate_overlay in self.page.overlay:
+                self.page.overlay.remove(self.duplicate_overlay)
+                self.page.update()
+
+        # Container principal do modal - responsivo
+        modal_width = min(450, self.page.window_width * 0.8)
+        modal_height = min(300, self.page.window_height * 0.5)
+        
+        modal_content = ft.Container(
+            content=ft.Container(
+                content=ft.Card(
+                    content=ft.Container(
+                        content=ft.Column(
+                            [
+                                # Cabeçalho com ícone e título
+                                ft.Container(
+                                    content=ft.Row(
+                                        [
+                                            ft.Icon(ft.Icons.WARNING_ROUNDED, 
+                                                   color=ft.Colors.ORANGE_600, 
+                                                   size=32),
+                                            ft.Text("Frase Duplicada", 
+                                                   size=18, 
+                                                   weight=ft.FontWeight.BOLD, 
+                                                   color=ft.Colors.ORANGE_700)
+                                        ],
+                                        alignment=ft.MainAxisAlignment.CENTER,
+                                        spacing=12
+                                    ),
+                                    margin=ft.margin.only(bottom=20)
+                                ),
+                                
+                                # Conteúdo principal
+                                ft.Container(
+                                    content=ft.Text(
+                                        f"A frase abaixo já existe na sua lista:\n\n"
+                                        f"'{duplicate_phrase}'\n\n"
+                                        f"Por favor, digite uma frase diferente ou edite a frase existente.",
+                                        text_align=ft.TextAlign.CENTER,
+                                        color=ft.Colors.GREY_700,
+                                        size=14,
+                                        weight=ft.FontWeight.W_400
+                                    ),
+                                    margin=ft.margin.only(bottom=25)
+                                ),
+                                
+                                # Botão de ação
+                                ft.Container(
+                                    content=ft.ElevatedButton(
+                                        "OK, ENTENDI",
+                                        on_click=close_overlay,
+                                        bgcolor=ft.Colors.ORANGE_600,
+                                        color=ft.Colors.WHITE,
+                                        width=160,
+                                        height=40,
+                                        style=ft.ButtonStyle(
+                                            shape=ft.RoundedRectangleBorder(radius=8),
+                                            elevation=2
+                                        )
+                                    ),
+                                    alignment=ft.alignment.center
+                                )
+                            ],
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                            spacing=0,
+                            tight=True
+                        ),
+                        padding=ft.padding.all(25),
+                        width=modal_width,
+                        bgcolor=ft.Colors.WHITE,
+                        border_radius=12
+                    ),
+                    elevation=8,
+                    color=ft.Colors.WHITE
+                ),
+                alignment=ft.alignment.center,
+                width=self.page.window_width,
+                height=self.page.window_height
+            ),
+            bgcolor=ft.Colors.with_opacity(0.6, ft.Colors.BLACK),  # Fundo semi-transparente
+            alignment=ft.alignment.center,
+            expand=True
+        )
+        
+        print("DEBUG: Criando overlay modal responsivo")
+        self.duplicate_overlay = modal_content
+        self.page.overlay.append(self.duplicate_overlay)
+        print("DEBUG: Overlay adicionado, atualizando página")
+        self.page.update()
+        
+        # Também atualiza o label_lembrete para dar feedback visual adicional
+        self.label_lembrete.value = f"❌ Frase '{duplicate_phrase}' já existe! Digite uma diferente."
+        self.label_lembrete.color = ft.Colors.RED_600
 
     def on_delete_selected(self, e):
         phrase_to_delete = self.frase_selecionada_para_edicao
