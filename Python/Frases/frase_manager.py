@@ -129,6 +129,20 @@ def importar_frases_de_arquivo(caminho_arquivo):
         print(f"Erro ao importar frases do arquivo: {e}")
         return 0, 0, 0
 
+def exportar_frases_para_arquivo(caminho_arquivo, ordenacao="original"):
+    """Exporta todas as frases do banco de dados para um arquivo de texto."""
+    try:
+        frases = ler_frases(ordenacao)
+        
+        with open(caminho_arquivo, "w", encoding="utf-8") as f:
+            for frase in frases:
+                f.write(frase + "\n")
+        
+        return len(frases)
+    except Exception as e:
+        print(f"Erro ao exportar frases para arquivo: {e}")
+        return 0
+
 
 # --- Funções de Gerenciamento de Usuários (NOVAS) ---
 

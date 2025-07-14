@@ -5,6 +5,25 @@ import frase_manager
 import random
 import os
 import asyncio
+import tracemalloc
+import warnings
+import ctypes
+from ctypes import wintypes
+import json
+import time
+import threading
+
+# Habilita o tracemalloc para rastreamento de memória
+tracemalloc.start()
+
+# Configura warnings para serem menos verbosos em produção
+warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*tracemalloc.*")
+
+# Importa o rastreador de coordenadas
+try:
+    from coordinate_tracker import CoordinateTracker
+except ImportError:
+    CoordinateTracker = None
 
 # Cores e Constantes para o Flet
 ACCENT_COLOR = ft.Colors.GREEN_500
@@ -28,6 +47,12 @@ class PhraseManagerApp:
         self.timeout_task = None
 
         self.frase_selecionada_para_edicao = None
+        
+        # Arquivo para salvar posição da janela
+        self.config_file = "window_position.json"
+
+        # Inicializa o rastreador de coordenadas se disponível
+        self.coordinate_tracker = CoordinateTracker(page) if CoordinateTracker else None
 
         self.opcoes_ordenacao = {
             "Ordem de Criação (Antiga para Nova)": "original",
@@ -39,6 +64,98 @@ class PhraseManagerApp:
 
         self._build_ui()
         self._load_and_display_phrases_initial()
+        
+        # Inicia o rastreamento de coordenadas se disponível
+        if self.coordinate_tracker:
+            self.page.run_task(self._start_coordinate_tracking)
+
+    def load_window_position(self):
+        """Carrega a posição salva da janela."""
+        try:
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r') as f:
+                    data = json.load(f)
+                    return data.get('x', 100), data.get('y', 100)
+        except Exception as e:
+            print(f"Erro ao carregar posição: {e}")
+        return 100, 100  # Posição padrão
+    
+    def save_window_position(self):
+        """Salva a posição atual da janela."""
+        try:
+            x, y, width, height = self.get_window_position()
+            data = {
+                'x': x,
+                'y': y,
+                'width': width,
+                'height': height,
+                'monitor': self.detect_monitor(x)
+            }
+            with open(self.config_file, 'w') as f:
+                json.dump(data, f, indent=2)
+            return True
+        except Exception as e:
+            print(f"Erro ao salvar posição: {e}")
+            return False
+    
+    def get_window_position(self):
+        """Obtém a posição real da janela usando Win32 API."""
+        try:
+            # Obtém o handle da janela ativa (presumivelmente nossa janela Flet)
+            hwnd = ctypes.windll.user32.GetForegroundWindow()
+            
+            if hwnd:
+                # Estrutura RECT para armazenar as coordenadas
+                rect = wintypes.RECT()
+                ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect))
+                return rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top
+            else:
+                return 0, 0, 700, 620
+        except Exception as e:
+            print(f"Erro ao obter posição da janela: {e}")
+            return 0, 0, 700, 620
+    
+    def detect_monitor(self, x):
+        """Detecta em qual monitor a janela está baseado na coordenada X."""
+        if x < -100:
+            return "🟠 Esquerdo"
+        elif x < 1820:
+            return "🔵 Central" 
+        else:
+            return "🟢 Direito"
+    
+    def save_current_position_gui(self, e=None):
+        """Salva a posição atual quando chamado pela UI."""
+        try:
+            if self.save_window_position():
+                x, y, _, _ = self.get_window_position()
+                monitor = self.detect_monitor(x)
+                
+                # Atualiza o snack bar
+                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y} ({monitor})", color=ft.Colors.WHITE)
+                self.page.snack_bar.bgcolor = ft.Colors.GREEN_700
+                
+                # Atualiza o label
+                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y} ({monitor})"
+                self.label_lembrete.color = ft.Colors.GREEN_600
+            else:
+                # Atualiza o snack bar
+                self.page.snack_bar.content = ft.Text("❌ Erro ao salvar posição", color=ft.Colors.WHITE)
+                self.page.snack_bar.bgcolor = ft.Colors.RED_700
+                
+                # Atualiza o label
+                self.label_lembrete.value = "❌ Erro ao salvar posição"
+                self.label_lembrete.color = ft.Colors.RED_600
+            
+            # Mostra o snack bar e atualiza a página
+            self.page.snack_bar.open = True
+            self.page.update()
+        except Exception as e:
+            print(f"Erro ao salvar posição: {e}")
+            self.page.snack_bar.content = ft.Text(f"❌ Erro: {e}", color=ft.Colors.WHITE)
+            self.page.snack_bar.bgcolor = ft.Colors.RED_700
+            self.page.snack_bar.open = True
+            self.page.update()
 
     def _build_ui(self):
         self.page.snack_bar = ft.SnackBar(content=ft.Text(""), action="OK")
@@ -128,6 +245,20 @@ class PhraseManagerApp:
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
+        self.export_button = ft.ElevatedButton(
+            "Exportar Frases",
+            on_click=self.export_phrases_gui,
+            bgcolor=ft.Colors.GREEN_600,
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
+        )
+        self.save_position_button = ft.ElevatedButton(
+            "💾 Salvar Posição",
+            on_click=self.save_current_position_gui,
+            bgcolor=ft.Colors.PURPLE_600,
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
+        )
 
         options = [ft.dropdown.Option(text=key, key=key) for key in self.opcoes_ordenacao.keys()]
         self.sort_dropdown = ft.Dropdown(
@@ -145,7 +276,14 @@ class PhraseManagerApp:
         )
         self.total_phrases_text = ft.Text("Total de Frases: 0", weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
 
+        # Cria o display de coordenadas se o rastreador estiver disponível
+        coordinate_display = None
+        if self.coordinate_tracker:
+            coordinate_display = self.coordinate_tracker.create_coordinate_display()
+
         self.page.add(
+            # Adiciona o display de coordenadas no topo se disponível
+            coordinate_display if coordinate_display else ft.Container(height=0),
             ft.Container(height=10),
             self.label_lembrete,
             ft.Container(height=15),
@@ -178,7 +316,9 @@ class PhraseManagerApp:
                             self.update_button,
                             self.delete_button,
                             ft.Container(height=20),
-                            self.import_button
+                            self.import_button,
+                            self.export_button,
+                            self.save_position_button
                         ],
                         alignment=ft.MainAxisAlignment.START,
                         horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
@@ -246,20 +386,16 @@ class PhraseManagerApp:
     def add_phrase_from_input(self, e):
         new_phrase = self.phrase_input.value.strip()
         if new_phrase:
-            # Verifica se a frase já existe antes de tentar adicionar
-            existing_phrases = frase_manager.ler_frases()
-            
-            if new_phrase in existing_phrases:
-                self._show_duplicate_phrase_alert(new_phrase)
-                return
-            
+            # Tenta adicionar a frase diretamente
             if frase_manager.adicionar_frase(new_phrase):
                 self.label_lembrete.value = f"✅ Frase '{new_phrase}' adicionada com sucesso!"
                 self.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.phrase_input.value = ""
+                self.frase_selecionada_para_edicao = None  # Limpa a seleção
                 self.page.update()
                 self._load_and_display_phrases_initial()
             else:
+                # Se falhou (provavelmente frase duplicada), mostra o alerta
                 self._show_duplicate_phrase_alert(new_phrase)
         else:
             self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
@@ -413,12 +549,16 @@ class PhraseManagerApp:
         
         self.page.update()
         
-        # Rola até a frase duplicada usando uma abordagem mais simples
+        # Rola até a frase duplicada após um pequeno delay para garantir que a lista foi renderizada
         if duplicate_index >= 0:
-            self._scroll_to_duplicate_item(duplicate_index)
+            # Usa um delay pequeno para garantir que a UI foi atualizada
+            async def scroll_task():
+                await self._scroll_to_duplicate_after_delay(duplicate_index)
+            self.page.run_task(scroll_task)
 
-    def _scroll_to_duplicate_item(self, duplicate_index):
-        """Rola para a frase duplicada usando um timer simples."""
+    async def _scroll_to_duplicate_after_delay(self, duplicate_index):
+        """Rola para a frase duplicada após um pequeno delay."""
+        await asyncio.sleep(0.1)  # Pequeno delay para garantir que a UI foi renderizada
         try:
             # Calcula a posição aproximada do item (altura estimada por item)
             estimated_item_height = 60  # Altura estimada de cada ListTile
@@ -428,20 +568,9 @@ class PhraseManagerApp:
             visible_height = 300  # Altura estimada da área visível da lista
             centered_position = max(0, scroll_position - (visible_height / 2))
             
-            # Usa um timer simples para fazer o scroll após um pequeno delay
-            def do_scroll():
-                try:
-                    self.list_view.scroll_to(offset=centered_position, duration=500)
-                except Exception as e:
-                    pass
-            
-            # Agenda o scroll para ser executado após 100ms
-            import threading
-            timer = threading.Timer(0.1, do_scroll)
-            timer.start()
-            
+            self.list_view.scroll_to(offset=centered_position, duration=500)
         except Exception as e:
-            pass
+            pass  # Se houver erro no scroll, apenas ignora
 
     def _remove_highlight_from_list(self):
         """Remove o destaque da lista, voltando ao estado normal."""
@@ -472,7 +601,7 @@ class PhraseManagerApp:
             self.page.update()
             self._load_and_display_phrases_initial()
             if not frase_manager.ler_frases() and self.lembrete_ativo:
-                asyncio.create_task(self.stop_reminders_gui_async())
+                self.page.run_task(self.stop_reminders_gui_async)
                 self.label_lembrete.value = "Todas as frases foram excluídas. Lembretes parados."
                 self.page.update()
 
@@ -492,7 +621,7 @@ class PhraseManagerApp:
         dialog.open = True
         self.page.update()
 
-    async def on_update_selected(self, e):
+    def on_update_selected(self, e):
         old_phrase = self.frase_selecionada_para_edicao
         new_phrase = self.phrase_input.value.strip()
         if old_phrase is None:
@@ -546,7 +675,7 @@ class PhraseManagerApp:
         dialog.open = True
         self.page.update()
 
-    async def start_reminders_gui(self, e):
+    def start_reminders_gui(self, e):
         if self.lembrete_ativo:
             self.label_lembrete.value = "Lembretes já estão ativos."
             self.page.update()
@@ -597,16 +726,17 @@ class PhraseManagerApp:
                     self.page.snack_bar.content = ft.Text("Tempo limite dos lembretes atingido. Parando...", color=ft.Colors.WHITE)
                     self.page.snack_bar.open = True
                     await self.stop_reminders_gui_async()
-            self.timeout_task = asyncio.create_task(stop_after_timeout_task())
+            self.timeout_task = self.page.run_task(stop_after_timeout_task)
             self.label_lembrete.value = f"Lembretes iniciados! A cada {interval_seconds} segundos, por {timeout_minutes} minuto(s)."
         else:
             self.label_lembrete.value = f"Lembretes iniciados! A cada {interval_seconds} segundos (sem tempo limite)."
 
         self.page.update()
-        self.current_reminder_task = asyncio.create_task(self._show_random_reminder_loop())
+        self.current_reminder_task = self.page.run_task(self._show_random_reminder_loop)
 
-    async def stop_reminders_gui(self, e):
-        await self.stop_reminders_gui_async()
+    def stop_reminders_gui(self, e):
+        # Executa a função async em uma task
+        self.page.run_task(self.stop_reminders_gui_async)
 
     async def stop_reminders_gui_async(self):
         if not self.lembrete_ativo:
@@ -701,6 +831,65 @@ class PhraseManagerApp:
             self.page.snack_bar.content = ft.Text(f"Erro: {str(ex)}", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
+
+    def export_phrases_gui(self, e):
+        """Interface para exportar frases para um arquivo."""
+        # Cria um FilePicker para seleção do local de salvamento
+        def on_save_location_picked(e: ft.FilePickerResultEvent):
+            if e.path:
+                save_path = e.path
+                if not save_path.endswith('.txt'):
+                    save_path += '.txt'
+                self._export_phrases_to_file(save_path)
+            else:
+                self.page.snack_bar.content = ft.Text("Exportação cancelada.", color=ft.Colors.WHITE)
+                self.page.snack_bar.open = True
+                self.page.update()
+
+        file_picker = ft.FilePicker(on_result=on_save_location_picked)
+        self.page.overlay.append(file_picker)
+        self.page.update()
+        
+        # Abre o diálogo de salvamento de arquivo
+        file_picker.save_file(
+            dialog_title="Salvar frases como arquivo de texto",
+            file_type=ft.FilePickerFileType.CUSTOM,
+            allowed_extensions=["txt"],
+            file_name="frases_exportadas.txt"
+        )
+
+    def _export_phrases_to_file(self, file_path):
+        """Exporta todas as frases para um arquivo de texto."""
+        try:
+            total_exportadas = frase_manager.exportar_frases_para_arquivo(file_path)
+            
+            if total_exportadas > 0:
+                self.label_lembrete.value = f"Exportação concluída! {total_exportadas} frases exportadas para {file_path}."
+                self.page.snack_bar.content = ft.Text(
+                    f"✅ {total_exportadas} frases exportadas com sucesso!", 
+                    color=ft.Colors.WHITE
+                )
+            else:
+                self.label_lembrete.value = "Nenhuma frase encontrada para exportar."
+                self.page.snack_bar.content = ft.Text(
+                    "⚠️ Nenhuma frase encontrada para exportar.", 
+                    color=ft.Colors.WHITE
+                )
+            
+            self.page.snack_bar.open = True
+            self.page.update()
+            
+        except Exception as ex:
+            self.label_lembrete.value = f"Erro durante a exportação: {str(ex)}"
+            self.page.snack_bar.content = ft.Text(f"❌ Erro: {str(ex)}", color=ft.Colors.WHITE)
+            self.page.snack_bar.open = True
+            self.page.update()
+
+    async def _start_coordinate_tracking(self):
+        """Inicia o rastreamento de coordenadas após um pequeno delay."""
+        await asyncio.sleep(1.0)  # Aguarda a UI carregar completamente
+        if self.coordinate_tracker:
+            await self.coordinate_tracker.start_tracking()
 
 # --- Classe da Tela de Login para Flet ---
 class LoginScreen:
@@ -808,4 +997,65 @@ def main(page: ft.Page):
     PhraseManagerApp(page)
 
 if __name__ == "__main__":
-    ft.app(target=main)
+    # Carrega a posição salva se existir
+    config_file = "window_position.json"
+    saved_position = None
+    
+    try:
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as f:
+                data = json.load(f)
+                saved_position = {
+                    'x': data.get('x', None),
+                    'y': data.get('y', None),
+                    'width': data.get('width', 700),
+                    'height': data.get('height', 620)
+                }
+                print(f"📍 Posição salva encontrada: x={saved_position['x']}, y={saved_position['y']}")
+    except Exception as e:
+        print(f"⚠️ Erro ao carregar posição: {e}")
+    
+    def main_with_position(page: ft.Page):
+        # Se há posição salva, prepara para mover a janela suavemente
+        if saved_position and saved_position['x'] is not None and saved_position['y'] is not None:
+            
+            def move_window_smoothly():
+                time.sleep(0.1)  # Delay mínimo para a janela aparecer
+                try:
+                    # Usa a API do Windows para mover a janela
+                    hwnd = ctypes.windll.user32.GetForegroundWindow()
+                    if hwnd:
+                        x = saved_position['x']
+                        y = saved_position['y']
+                        width = saved_position['width']
+                        height = saved_position['height']
+                        
+                        # Esconde a janela temporariamente
+                        ctypes.windll.user32.ShowWindow(hwnd, 0)  # SW_HIDE
+                        
+                        # Move e redimensiona a janela (enquanto escondida)
+                        ctypes.windll.user32.SetWindowPos(
+                            hwnd, 0, x, y, width, height, 0x0040
+                        )
+                        
+                        # Pequeno delay e depois mostra a janela na nova posição
+                        time.sleep(0.05)
+                        ctypes.windll.user32.ShowWindow(hwnd, 1)  # SW_SHOWNORMAL
+                        
+                        print(f"🎯 Janela posicionada em: x={x}, y={y}")
+                except Exception as e:
+                    print(f"❌ Erro ao posicionar janela: {e}")
+            
+            # Move a janela em uma thread separada
+            threading.Thread(target=move_window_smoothly, daemon=True).start()
+        
+        # Chama a função main original
+        main(page)
+    
+    # Inicia a aplicação
+    if saved_position:
+        print(f"🎯 Iniciando com posição personalizada")
+        ft.app(target=main_with_position)
+    else:
+        print("📍 Iniciando na posição padrão")
+        ft.app(target=main)
