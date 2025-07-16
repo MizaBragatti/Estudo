@@ -22,14 +22,15 @@ Proteger Banco de dados
 Criar Login - ok
 Tkinter - Flet - ok
 Alterar o botões, pois não estão mostrando direito se estão ativos ou não - ok
-Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção
+Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção - ok
 Está rolando sozinho as frases, quando ativo lembrete - ok
 Não está retornando erro de usuário inválido
 Desabilitar os campos de tempo do lembrete, quando iniciado
 Os botões de edição de frases não estão funcionando
 Não está retornando erro de duplicidade - ok
 Adicionar Frase não está desabilitando - ok
-Exportar frases
-Remover todos debugs
+Exportar frases - ok
+Remover todos debugs - ok
 Remover testes obsoletos - ok
+Botão atualizar frase com mesmo comportamento do adicionar para duplicatas - ok
 Acrescentar busca de frases
