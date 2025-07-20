@@ -1,24 +1,23 @@
 # main.py
-
-import flet as ft
-import frase_manager
+"""
+Arquivo principal da aplicação - versão modularizada.
+"""ort frase_manager
 import random
-import os
-import asyncio
 import tracemalloc
 import warnings
-import ctypes
-from ctypes import wintypes
-import json
-import time
-import threading
+import flet as ftc
+import frase_manager
 
 # Habilita o tracemalloc para rastreamento de memória
 tracemalloc.start()
 
-# Configura warnings para serem menos verbosos em produção
+# Configura warnings para serem menos verbosos em produçãoimport threading
 warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*tracemalloc.*")
-
+alloc para rastreamento de memória
+# Importações temporárias inline até criarmos os módulostracemalloc.start()
+DEFAULT_WINDOW_WIDTH = 700
+DEFAULT_WINDOW_HEIGHT = 620
+warnings.filterwarnings("ignore", category=RuntimeWarning, message=".*tracemalloc.*")
 # Importa o rastreador de coordenadas
 try:
     from coordinate_tracker import CoordinateTracker
@@ -27,42 +26,31 @@ except ImportError:
 
 # Cores e Constantes para o Flet
 ACCENT_COLOR = ft.Colors.GREEN_500
-SECONDARY_ACCENT_COLOR = ft.Colors.BLUE_400
-BACKGROUND_COLOR = ft.Colors.GREY_100
-TEXT_COLOR = ft.Colors.GREY_900
+SECONDARY_ACCENT_COLOR = ft.Colors.BLUE_40000
+BACKGROUND_COLOR = ft.Colors.GREY_100E_400
+TEXT_COLOR = ft.Colors.GREY_900GROUND_COLOR = ft.Colors.GREY_100
 SURFACE_COLOR = ft.Colors.WHITE
+ft.Colors.WHITE
+def main(page: ft.Page):
+    """Função principal da aplicação."""class PhraseManagerApp:
+    # Aplica o tamanho da janela    def __init__(self, page: ft.Page, window_width=700, window_height=620):
+    page.window_width = DEFAULT_WINDOW_WIDTH
+    page.window_height = DEFAULT_WINDOW_HEIGHT Frases"
+    nment = ft.CrossAxisAlignment.START
+    # Inicializa o banco de dadosn()
+    frase_manager.create_table()
+    frase_manager.create_users_table()
+    
+    # Importa e inicia a aplicação principal do arquivo original
+    from main_backup import PhraseManagerAppNone
+    
+    # Limpa a página e inicia a aplicação
+    page.clean()None
+    PhraseManagerApp(page, DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT)
 
-class PhraseManagerApp:
-    def __init__(self, page: ft.Page, window_width=700, window_height=620):
-        self.page = page
-        self.page.title = "Gerenciador e Lembretes de Frases"
-        self.page.vertical_alignment = ft.CrossAxisAlignment.START
-        # Não precisa redefinir aqui, já foi definido na função main()
-        self.page.bgcolor = BACKGROUND_COLOR
-
-        self.intervalo_lembrete_ms = 5000
-        self.lembrete_ativo = False
-        self.current_reminder_task = None
-        self.timeout_task = None
-
-        self.frase_selecionada_para_edicao = None
-        
-        # Arquivo para salvar posição da janela
-        self.config_file = "window_position.json"
-
-        # Inicializa o rastreador de coordenadas se disponível
-        self.coordinate_tracker = CoordinateTracker(page) if CoordinateTracker else None
-
-        # Configura o evento de fechamento da janela para salvar posição/tamanho
-        self.page.on_window_event = self._on_window_event
-
-        self.opcoes_ordenacao = {
-            "Ordem de Criação (Antiga para Nova)": "original",
-            "Ordem de Criação Inversa (Nova para Antiga)": "original_inversa",
-            "Ordem Alfabética (A-Z)": "alfabetica",
-            "Ordem Alfabética Inversa (Z-A)": "alfabetica_inversa"
-        }
-        self.modo_ordenacao = ft.Ref[ft.Dropdown]()
+    self.config_file = "window_position.json"
+if __name__ == "__main__":
+    ft.app(target=main)        self.modo_ordenacao = ft.Ref[ft.Dropdown]()
 
         self._build_ui()
         self._load_and_display_phrases_initial()
@@ -198,15 +186,15 @@ class PhraseManagerApp:
         """Salva a posição atual quando chamado pela UI."""
         try:
             if self.save_window_position():
-                x, y, _, _ = self.get_window_position()
+                x, y, width, height = self.get_window_position()
                 monitor = self.detect_monitor(x)
                 
                 # Atualiza o snack bar
-                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y} ({monitor})", color=ft.Colors.WHITE)
+                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})", color=ft.Colors.WHITE)
                 self.page.snack_bar.bgcolor = ft.Colors.GREEN_700
                 
                 # Atualiza o label
-                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y} ({monitor})"
+                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})"
                 self.label_lembrete.color = ft.Colors.GREEN_600
             else:
                 # Atualiza o snack bar
@@ -262,17 +250,6 @@ class PhraseManagerApp:
             disabled=True,
             bgcolor=ft.Colors.RED_200,
             color=ft.Colors.GREY_700,
-            style=ft.ButtonStyle(
-                shape=ft.RoundedRectangleBorder(radius=5),
-            )
-        )
-
-        # Botão para testar o salvamento manual
-        self.test_save_button = ft.ElevatedButton(
-            "💾 Testar Salvamento",
-            on_click=self.test_save_position,
-            bgcolor=ft.Colors.ORANGE_500,
-            color=ft.Colors.WHITE,
             style=ft.ButtonStyle(
                 shape=ft.RoundedRectangleBorder(radius=5),
             )
@@ -1160,7 +1137,7 @@ if __name__ == "__main__":
                     'width': data.get('width', 700),
                     'height': data.get('height', 620)
                 }
-                print(f"📍 Posição salva encontrada: x={saved_position['x']}, y={saved_position['y']}")
+                print(f"📍 Posição salva encontrada: x={saved_position['x']}, y={saved_position['y']}, {saved_position['width']}x{saved_position['height']}")
     except Exception as e:
         print(f"⚠️ Erro ao carregar posição: {e}")
     

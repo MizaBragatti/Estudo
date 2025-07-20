@@ -67,7 +67,8 @@ class PhraseManagerApp:
         """Trata eventos da janela, especialmente o fechamento."""
         try:
             if e.data == "close":
-                self.window_manager.save_window_position()
+                # Não salva automaticamente - usuário deve usar o botão "💾 Salvar Posição"
+                pass
         except Exception as e:
             pass
     
@@ -111,15 +112,6 @@ class PhraseManagerApp:
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
 
-        # Botão para testar o salvamento manual
-        self.test_save_button = ft.ElevatedButton(
-            "💾 Testar Salvamento",
-            on_click=self.test_save_position,
-            bgcolor=ft.Colors.ORANGE_500,
-            color=ft.Colors.WHITE,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
-        )
-
         # Linha de configuração de lembretes
         reminder_config_row = ft.Row(
             controls=[
@@ -128,9 +120,7 @@ class PhraseManagerApp:
                 self.timeout_entry,
                 ft.Container(width=20),
                 self.start_button,
-                self.stop_button,
-                ft.Container(width=10),
-                self.test_save_button
+                self.stop_button
             ],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10
@@ -329,53 +319,24 @@ class PhraseManagerApp:
         """Remove o destaque da lista, voltando ao estado normal."""
         self.phrase_list_manager.remove_highlight_from_list(self.ui_handlers.on_list_item_select)
     
-    def test_save_position(self, e=None):
-        """Testa o salvamento da posição para debug."""
-        try:
-            # Obtém posição atual
-            x, y, width, height = self.window_manager.get_window_position()
-            
-            # Tenta salvar
-            if self.window_manager.save_window_position():
-                # Mostra feedback visual
-                self.page.snack_bar.content = ft.Text(f"TESTE: Salvo x={x}, y={y}, {width}x{height}", color=ft.Colors.WHITE)
-                self.page.snack_bar.bgcolor = ft.Colors.ORANGE_700
-                
-                # Atualiza o label
-                self.label_lembrete.value = f"TESTE: Posição salva x={x}, y={y}, {width}x{height}"
-                self.label_lembrete.color = ft.Colors.ORANGE_600
-                
-            else:
-                # Mostra erro
-                self.page.snack_bar.content = ft.Text("TESTE: Erro ao salvar!", color=ft.Colors.WHITE)
-                self.page.snack_bar.bgcolor = ft.Colors.RED_700
-                
-                self.label_lembrete.value = "TESTE: Erro ao salvar posição"
-                self.label_lembrete.color = ft.Colors.RED_600
-                
-            # Mostra o snack bar e atualiza a página
-            self.page.snack_bar.open = True
-            self.page.update()
-            
-        except Exception as e:
-            self.page.snack_bar.content = ft.Text(f"TESTE: Erro {e}", color=ft.Colors.WHITE)
-            self.page.snack_bar.bgcolor = ft.Colors.RED_700
-            self.page.snack_bar.open = True
-            self.page.update()
-
+    def toggle_timer_controls(self, enabled):
+        """Controla se os botões de timer estão habilitados."""
+        self.start_button.disabled = not enabled
+        self.stop_button.disabled = enabled
+        
     def save_current_position_gui(self, e=None):
         """Salva a posição atual quando chamado pela UI."""
         try:
             if self.window_manager.save_window_position():
-                x, y, _, _ = self.window_manager.get_window_position()
+                x, y, width, height = self.window_manager.get_window_position()
                 monitor = self.window_manager.detect_monitor(x)
                 
                 # Atualiza o snack bar
-                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y} ({monitor})", color=ft.Colors.WHITE)
+                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})", color=ft.Colors.WHITE)
                 self.page.snack_bar.bgcolor = ft.Colors.GREEN_700
                 
                 # Atualiza o label
-                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y} ({monitor})"
+                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})"
                 self.label_lembrete.color = ft.Colors.GREEN_600
             else:
                 # Atualiza o snack bar
@@ -589,11 +550,7 @@ class PhraseManagerApp:
                             
                             print(f"📏 Tamanho da janela atualizado: {target_width}x{target_height}")
                             
-                            # Salva a nova posição/tamanho
-                            if self.window_manager.save_window_position():
-                                print(f"💾 Posição/tamanho salvos automaticamente")
-                            else:
-                                print(f"❌ Erro ao salvar posição/tamanho automaticamente")
+                            # Não salva automaticamente - usuário deve usar o botão "💾 Salvar Posição"
                 
                 except Exception as e:
                     # Ignore erros de verificação, mas loga para debug

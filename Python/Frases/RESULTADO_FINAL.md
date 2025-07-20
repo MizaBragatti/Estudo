@@ -94,3 +94,7 @@ python main_backup.py
 ---
 
 **💡 Dica**: Leia os arquivos `MODULARIZAÇÃO.md` e `COMPARAÇÃO.md` para entender todos os detalhes da refatoração.
+
+<!-- ARQUIVO OBSOLETO - PODE SER REMOVIDO -->
+<!-- Esta documentação já não é mais necessária pois a modularização foi concluída -->
+<!-- O projeto agora usa main_modularized.py como arquivo principal -->

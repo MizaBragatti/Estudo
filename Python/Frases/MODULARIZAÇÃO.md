@@ -129,3 +129,7 @@ def main(page: ft.Page):
 ✅ **Manutenção muito mais fácil**  
 ✅ **Estrutura profissional e escalável**  
 ✅ **Todas as funcionalidades preservadas**
+
+<!-- ARQUIVO OBSOLETO - PODE SER REMOVIDO -->
+<!-- Referencias main_new.py que não existe mais -->
+<!-- O projeto atual usa main_modularized.py -->
