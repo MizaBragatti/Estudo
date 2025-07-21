@@ -35,3 +35,4 @@ Remover testes obsoletos - ok
 Botão atualizar frase com mesmo comportamento do adicionar para duplicatas - ok
 Acrescentar busca de frases
 Permitir seleção múltipla com CTRL + Clique e exclusão múltipla - ok
+Verificar os ids no banco de dados

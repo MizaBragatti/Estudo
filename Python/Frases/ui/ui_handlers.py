@@ -19,11 +19,11 @@ class UIHandlers:
     
     def on_list_item_select(self, e, phrase_text):
         """Manipula a seleção de um item da lista."""
-        # Usa a flag de CTRL da aplicação principal
-        ctrl_pressed = self.app.ctrl_pressed
+        # Usa apenas o modo checkbox por enquanto (mais confiável que detecção de CTRL)
+        multi_select_active = self.app.multi_select_mode
         
-        if ctrl_pressed:
-            # Seleção múltipla com CTRL
+        if multi_select_active:
+            # Seleção múltipla
             self.app.phrase_list_manager.toggle_phrase_selection(phrase_text)
             self.app.phrase_list_manager.reload_list_view_with_sorted_phrases(
                 self.app.phrases_data, self.on_list_item_select

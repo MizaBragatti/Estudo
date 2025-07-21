@@ -37,6 +37,7 @@ class PhraseManagerApp:
         self.timeout_task = None
         self.frase_selecionada_para_edicao = None
         self.ctrl_pressed = False  # Flag para detectar CTRL pressionado
+        self.multi_select_mode = False  # Flag para modo de seleção múltipla
         
         # Gerenciadores
         self.window_manager = WindowManager()
@@ -79,13 +80,25 @@ class PhraseManagerApp:
     def _on_keyboard_event(self, e):
         """Trata eventos de teclado para detectar CTRL pressionado."""
         try:
-            if e.key == "Control Left" or e.key == "Control Right":
+            # Detecta diferentes variações do CTRL
+            ctrl_keys = ["Control Left", "Control Right", "ControlLeft", "ControlRight", "Control"]
+            
+            if e.key in ctrl_keys or "control" in e.key.lower():
                 if e.event_type == "keydown":
                     self.ctrl_pressed = True
                 elif e.event_type == "keyup":
                     self.ctrl_pressed = False
         except Exception:
             pass
+    
+    def _on_multi_select_mode_change(self, e):
+        """Trata a mudança do modo de seleção múltipla."""
+        self.multi_select_mode = e.control.value
+        if not self.multi_select_mode:
+            # Se desativou o modo, limpa a seleção múltipla
+            self.phrase_list_manager.clear_selection()
+            self._reload_list_view_with_sorted_phrases()
+            self.ui_handlers._update_button_states()
     
     def _build_ui(self):
         """Constrói a interface do usuário."""
@@ -172,8 +185,15 @@ class PhraseManagerApp:
         
         # Texto de instrução para seleção múltipla
         self.multi_select_info = ft.Text(
-            "💡 Dica: Use CTRL + Clique para seleção múltipla",
+            "💡 Use o checkbox abaixo para ativar seleção múltipla",
             size=12, italic=True, color=ft.Colors.GREY_600
+        )
+        
+        # Checkbox para modo de seleção múltipla
+        self.multi_select_checkbox = ft.Checkbox(
+            label="Modo Seleção Múltipla",
+            value=False,
+            on_change=self._on_multi_select_mode_change
         )
 
         # Cria o display de coordenadas se o rastreador estiver disponível
@@ -265,7 +285,8 @@ class PhraseManagerApp:
                         controls=[
                             self.list_view,
                             self.total_phrases_text,
-                            self.multi_select_info
+                            self.multi_select_info,
+                            self.multi_select_checkbox
                         ],
                         expand=True
                     ),
