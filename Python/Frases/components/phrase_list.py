@@ -15,6 +15,7 @@ class PhraseListManager:
         self.page = page
         self.list_view = list_view
         self.phrases_data = []
+        self.selected_phrases = set()  # Conjunto para armazenar frases selecionadas
     
     def reload_list_view_with_sorted_phrases(self, phrases_data: list, on_item_select=None):
         """Recarrega a lista com as frases ordenadas."""
@@ -23,11 +24,18 @@ class PhraseListManager:
         
         if self.phrases_data:
             for i, phrase in enumerate(self.phrases_data):
-                item_text = ft.Text(f"{i+1}. {phrase}", color=TEXT_COLOR)
+                is_selected = phrase in self.selected_phrases
+                item_text = ft.Text(
+                    f"{i+1}. {phrase}", 
+                    color=ft.Colors.WHITE if is_selected else TEXT_COLOR,
+                    weight=ft.FontWeight.BOLD if is_selected else ft.FontWeight.NORMAL
+                )
                 list_tile = ft.ListTile(
                     title=item_text,
                     on_click=lambda e, p=phrase: on_item_select(e, p) if on_item_select else None,
-                    hover_color=ft.Colors.BLUE_50
+                    hover_color=ft.Colors.BLUE_50,
+                    bgcolor=ft.Colors.BLUE_600 if is_selected else None,
+                    shape=ft.RoundedRectangleBorder(radius=8) if is_selected else None
                 )
                 self.list_view.controls.append(list_tile)
         else:
@@ -92,3 +100,26 @@ class PhraseListManager:
     def remove_highlight_from_list(self, on_item_select=None):
         """Remove o destaque da lista, voltando ao estado normal."""
         self.reload_list_view_with_sorted_phrases(self.phrases_data, on_item_select)
+    
+    def toggle_phrase_selection(self, phrase: str):
+        """Adiciona ou remove uma frase da seleção múltipla."""
+        if phrase in self.selected_phrases:
+            self.selected_phrases.remove(phrase)
+        else:
+            self.selected_phrases.add(phrase)
+    
+    def clear_selection(self):
+        """Limpa toda a seleção atual."""
+        self.selected_phrases.clear()
+    
+    def get_selected_phrases(self):
+        """Retorna a lista de frases selecionadas."""
+        return list(self.selected_phrases)
+    
+    def select_all_phrases(self):
+        """Seleciona todas as frases."""
+        self.selected_phrases = set(self.phrases_data)
+    
+    def has_selection(self):
+        """Verifica se há frases selecionadas."""
+        return len(self.selected_phrases) > 0

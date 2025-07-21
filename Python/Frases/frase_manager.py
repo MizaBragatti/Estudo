@@ -85,6 +85,28 @@ def remover_frase(frase_para_remover):
     conn.close()
     return rows_affected > 0
 
+def remover_multiplas_frases(frases_para_remover):
+    """Remove múltiplas frases do banco de dados."""
+    if not frases_para_remover:
+        return 0
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    total_removed = 0
+    
+    try:
+        for frase in frases_para_remover:
+            cursor.execute("DELETE FROM frases WHERE texto = ?", (frase,))
+            total_removed += cursor.rowcount
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        total_removed = 0
+    finally:
+        conn.close()
+    
+    return total_removed
+
 def atualizar_frase(old_texto, new_texto):
     conn = get_db_connection()
     cursor = conn.cursor()

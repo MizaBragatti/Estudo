@@ -36,6 +36,7 @@ class PhraseManagerApp:
         self.current_reminder_task = None
         self.timeout_task = None
         self.frase_selecionada_para_edicao = None
+        self.ctrl_pressed = False  # Flag para detectar CTRL pressionado
         
         # Gerenciadores
         self.window_manager = WindowManager()
@@ -47,6 +48,9 @@ class PhraseManagerApp:
 
         # Configura o evento de fechamento da janela para salvar posição/tamanho
         self.page.on_window_event = self._on_window_event
+        
+        # Configura eventos de teclado para detectar CTRL
+        self.page.on_keyboard_event = self._on_keyboard_event
 
         # Opções de ordenação
         self.opcoes_ordenacao = SORT_OPTIONS
@@ -70,6 +74,17 @@ class PhraseManagerApp:
                 # Não salva automaticamente - usuário deve usar o botão "💾 Salvar Posição"
                 pass
         except Exception as e:
+            pass
+    
+    def _on_keyboard_event(self, e):
+        """Trata eventos de teclado para detectar CTRL pressionado."""
+        try:
+            if e.key == "Control Left" or e.key == "Control Right":
+                if e.event_type == "keydown":
+                    self.ctrl_pressed = True
+                elif e.event_type == "keyup":
+                    self.ctrl_pressed = False
+        except Exception:
             pass
     
     def _build_ui(self):
@@ -154,6 +169,12 @@ class PhraseManagerApp:
         self.phrase_list_manager = PhraseListManager(self.page, self.list_view)
         
         self.total_phrases_text = ft.Text("Total de Frases: 0", weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
+        
+        # Texto de instrução para seleção múltipla
+        self.multi_select_info = ft.Text(
+            "💡 Dica: Use CTRL + Clique para seleção múltipla",
+            size=12, italic=True, color=ft.Colors.GREY_600
+        )
 
         # Cria o display de coordenadas se o rastreador estiver disponível
         coordinate_display = None
@@ -209,6 +230,13 @@ class PhraseManagerApp:
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
+        self.select_all_button = ft.ElevatedButton(
+            "Selecionar Tudo",
+            on_click=self.ui_handlers.select_all_phrases,
+            bgcolor=ft.Colors.INDIGO_600,
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
+        )
     
     def _add_elements_to_page(self, coordinate_display, reminder_config_row):
         """Adiciona todos os elementos à página."""
@@ -236,7 +264,8 @@ class PhraseManagerApp:
                     ft.Column(
                         controls=[
                             self.list_view,
-                            self.total_phrases_text
+                            self.total_phrases_text,
+                            self.multi_select_info
                         ],
                         expand=True
                     ),
@@ -246,7 +275,8 @@ class PhraseManagerApp:
                             self.add_button,
                             self.update_button,
                             self.delete_button,
-                            ft.Container(height=20),
+                            self.select_all_button,
+                            ft.Container(height=10),
                             self.import_button,
                             self.export_button,
                             self.save_position_button
@@ -269,6 +299,7 @@ class PhraseManagerApp:
         self.frase_selecionada_para_edicao = None
         self.phrase_input.value = ""
         self.phrase_input.update()
+        self.phrase_list_manager.clear_selection()  # Limpa seleção múltipla
         self._apply_sort()
         self.ui_handlers._update_button_states()
 
