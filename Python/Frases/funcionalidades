@@ -18,7 +18,7 @@ Melhorar a edição - Quando seleciono uma frase para editar e dou 2 cliques em 
 Exclusão está com problema - ok
 Botão para selecionar tudo - ok
 Melhorar os botões, que estão grudados na borda - ok
-Proteger Banco de dados
+Proteger Banco de dados - ok
 Criar Login - ok
 Tkinter - Flet - ok
 Alterar o botões, pois não estão mostrando direito se estão ativos ou não - ok
@@ -26,7 +26,7 @@ Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando
 Está rolando sozinho as frases, quando ativo lembrete - ok
 Não está retornando erro de usuário inválido
 Desabilitar os campos de tempo do lembrete, quando iniciado
-Os botões de edição de frases não estão funcionando
+Os botões de edição de frases não estão funcionando - ok
 Não está retornando erro de duplicidade - ok
 Adicionar Frase não está desabilitando - ok
 Exportar frases - ok
@@ -34,5 +34,8 @@ Remover todos debugs - ok
 Remover testes obsoletos - ok
 Botão atualizar frase com mesmo comportamento do adicionar para duplicatas - ok
 Acrescentar busca de frases
-Permitir seleção múltipla com CTRL + Clique e exclusão múltipla - ok
+Permitir seleção múltipla com CTRL + Clique e exclusão múltipla
 Verificar os ids no banco de dados
+Criar sistema de APIs para acessar as frases no Banco de dados
+Adicionar usuario está com problema
+Fazer rodar no mobile
