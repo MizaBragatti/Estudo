@@ -30,9 +30,14 @@ def main(page: ft.Page, window_width=DEFAULT_WINDOW_WIDTH, window_height=DEFAULT
     frase_manager.create_table()
     frase_manager.create_users_table()
     
-    # Limpa a página e inicia a aplicação
+    def on_login_success():
+        """Callback chamado quando o login é bem-sucedido."""
+        page.clean()
+        PhraseManagerApp(page, window_width, window_height)
+    
+    # Limpa a página e inicia com a tela de login
     page.clean()
-    PhraseManagerApp(page, window_width, window_height)
+    LoginScreen(page, on_login_success)
 
 
 def main_with_position(page: ft.Page, saved_position: dict):
@@ -46,8 +51,17 @@ def main_with_position(page: ft.Page, saved_position: dict):
     page.window_height = saved_height
     page.update()  # Force a atualização do tamanho
     
-    # Aplica a posição usando o WindowManager
-    window_manager = WindowManager()
+    def on_login_success():
+        """Callback chamado quando o login é bem-sucedido."""
+        page.clean()
+        # Aplica a posição usando o WindowManager
+        window_manager = WindowManager()
+        window_manager.apply_saved_position(saved_position)
+        PhraseManagerApp(page, saved_width, saved_height)
+    
+    # Limpa a página e inicia com a tela de login
+    page.clean()
+    LoginScreen(page, on_login_success)
     window_manager.apply_window_position_and_size(saved_position)
     
     # Chama a função main com as dimensões salvas

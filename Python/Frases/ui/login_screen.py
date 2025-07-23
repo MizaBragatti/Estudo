@@ -99,18 +99,13 @@ class LoginScreen:
         if not username or not password:
             self.show_message("Por favor, insira usuário e senha para registrar.", is_error=True)
             return
-        if len(password) < 6:
-            self.show_message("A senha deve ter pelo menos 6 caracteres.", is_error=True)
-            return
-        if frase_manager.register_user(username, password):
+        
+        success, message = frase_manager.register_user(username, password)
+        if success:
             self.show_message(f"Usuário '{username}' registrado com sucesso! Agora você pode fazer login.")
             self.username_entry.value = ""
             self.password_entry.value = ""
             self.username_entry.update()
             self.password_entry.update()
         else:
-            self.show_message(f"O usuário '{username}' já existe. Por favor, escolha outro nome.", is_error=True)
-            self.username_entry.value = ""
-            self.password_entry.value = ""
-            self.username_entry.update()
-            self.password_entry.update()
+            self.show_message(message, is_error=True)

@@ -1,1 +1,7 @@
 *.pyc
+./__pycache__/*.pyc
+
+# Arquivos de segurança (NÃO COMMITAR!)
+.encryption_key
+*.key
+.migration_done
