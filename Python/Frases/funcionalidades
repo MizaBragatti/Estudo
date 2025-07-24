@@ -38,5 +38,6 @@ Acrescentar busca de frases - ok
 Permitir seleção múltipla com CTRL + Clique e exclusão múltipla
 Verificar os ids no banco de dados
 Criar sistema de APIs para acessar as frases no Banco de dados
-Adicionar usuario está com problema
+Adicionar usuario está com problema - ok
+Quando criar um usuário novo, a lista de frases zerada
 Fazer rodar no mobile
