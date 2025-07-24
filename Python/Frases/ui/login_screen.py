@@ -28,12 +28,14 @@ class LoginScreen:
         self.username_entry = ft.TextField(
             label="Usuário", width=250,
             text_align=ft.TextAlign.CENTER,
-            on_submit=lambda e: self.password_entry.focus()
+            on_submit=lambda e: self.password_entry.focus(),
+            on_change=self._clear_status_message  # Limpa mensagem ao digitar
         )
         self.password_entry = ft.TextField(
             label="Senha", password=True, can_reveal_password=True, width=250,
             text_align=ft.TextAlign.CENTER,
-            on_submit=self.attempt_login
+            on_submit=self.attempt_login,
+            on_change=self._clear_status_message  # Limpa mensagem ao digitar
         )
 
         self.login_button = ft.ElevatedButton(
@@ -49,6 +51,15 @@ class LoginScreen:
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
 
+        # Texto para mensagens de status/erro
+        self.status_text = ft.Text(
+            "", 
+            size=14, 
+            weight=ft.FontWeight.BOLD,
+            text_align=ft.TextAlign.CENTER,
+            width=250
+        )
+
         self.page.add(
             ft.Column(
                 controls=[
@@ -56,7 +67,9 @@ class LoginScreen:
                     ft.Container(height=20),
                     self.username_entry,
                     self.password_entry,
-                    ft.Container(height=20),
+                    ft.Container(height=10),
+                    self.status_text,  # Adicionado texto de status
+                    ft.Container(height=10),
                     self.login_button,
                     self.register_button,
                 ],
@@ -65,15 +78,43 @@ class LoginScreen:
                 spacing=10
             )
         )
+        # Configura a snack bar para mensagens
         self.page.snack_bar = ft.SnackBar(
             content=ft.Text(""),
-            action="OK"
+            action="OK",
+            action_color=ft.Colors.WHITE,
+            duration=4000  # 4 segundos
         )
+
+    def _clear_status_message(self, e):
+        """Limpa a mensagem de status quando o usuário começa a digitar."""
+        if hasattr(self, 'status_text') and self.status_text.value:
+            self.status_text.value = ""
+            self.status_text.update()
 
     def show_message(self, message, is_error=False):
         """Mostra uma mensagem na tela."""
-        self.page.snack_bar.content = ft.Text(message, color=ft.Colors.WHITE)
+        # Atualiza o texto de status diretamente na interface
+        self.status_text.value = message
+        self.status_text.color = ft.Colors.RED_500 if is_error else ft.Colors.GREEN_500
+        self.status_text.update()
+        
+        # Também mostra na snack bar como backup
+        # Fecha a snack bar atual se estiver aberta
+        if self.page.snack_bar.open:
+            self.page.snack_bar.open = False
+            self.page.update()
+        
+        # Configura a nova mensagem na snack bar
+        self.page.snack_bar.content = ft.Text(
+            message, 
+            color=ft.Colors.WHITE,
+            weight=ft.FontWeight.BOLD,
+            size=14
+        )
         self.page.snack_bar.bgcolor = ft.Colors.RED_700 if is_error else ft.Colors.GREEN_700
+        
+        # Abre a snack bar
         self.page.snack_bar.open = True
         self.page.update()
 
@@ -84,7 +125,11 @@ class LoginScreen:
         if not username or not password:
             self.show_message("Por favor, insira usuário e senha.", is_error=True)
             return
-        if frase_manager.authenticate_user(username, password):
+        
+        user_id = frase_manager.authenticate_user(username, password)
+        if user_id:
+            # Define o usuário atual logado
+            frase_manager.set_current_user(user_id)
             self.show_message("Login bem-sucedido!")
             self.on_login_success()
         else:
@@ -96,11 +141,13 @@ class LoginScreen:
         """Tenta registrar um novo usuário."""
         username = self.username_entry.value.strip()
         password = self.password_entry.value.strip()
+        
         if not username or not password:
             self.show_message("Por favor, insira usuário e senha para registrar.", is_error=True)
             return
         
         success, message = frase_manager.register_user(username, password)
+        
         if success:
             self.show_message(f"Usuário '{username}' registrado com sucesso! Agora você pode fazer login.")
             self.username_entry.value = ""
