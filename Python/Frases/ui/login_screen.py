@@ -125,7 +125,11 @@ class LoginScreen:
         if not username or not password:
             self.show_message("Por favor, insira usuário e senha.", is_error=True)
             return
-        if frase_manager.authenticate_user(username, password):
+        
+        user_id = frase_manager.authenticate_user(username, password)
+        if user_id:
+            # Define o usuário atual logado
+            frase_manager.set_current_user(user_id)
             self.show_message("Login bem-sucedido!")
             self.on_login_success()
         else:

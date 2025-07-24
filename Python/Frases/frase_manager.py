@@ -46,6 +46,18 @@ def get_or_create_encryption_key():
 
 ENCRYPTION_KEY = get_or_create_encryption_key()
 
+# Variável global para armazenar o ID do usuário logado
+CURRENT_USER_ID = None
+
+def set_current_user(user_id):
+    """Define o usuário atual logado."""
+    global CURRENT_USER_ID
+    CURRENT_USER_ID = user_id
+
+def get_current_user():
+    """Retorna o ID do usuário atual logado."""
+    return CURRENT_USER_ID
+
 def encrypt_text(text):
     """
     Criptografa um texto usando XOR simples (para demonstração).
@@ -103,13 +115,44 @@ def create_table():
     """Cria a tabela 'frases' se ela ainda não existir."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS frases (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            texto TEXT NOT NULL UNIQUE,
-            data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+    
+    # Verifica se a tabela já existe e se tem a coluna user_id
+    cursor.execute("PRAGMA table_info(frases)")
+    columns = cursor.fetchall()
+    column_names = [column[1] for column in columns]
+    
+    if not columns:  # Tabela não existe
+        cursor.execute('''
+            CREATE TABLE frases (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                texto TEXT NOT NULL,
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_encrypted INTEGER DEFAULT 1,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(user_id, texto)
+            )
+        ''')
+    elif 'user_id' not in column_names:  # Tabela existe mas não tem user_id
+        # Adiciona a coluna user_id para compatibilidade com dados existentes
+        cursor.execute("ALTER TABLE frases ADD COLUMN user_id INTEGER DEFAULT 1")
+        cursor.execute("ALTER TABLE frases ADD COLUMN is_encrypted INTEGER DEFAULT 1")
+        # Remove a constraint UNIQUE antiga e recria com user_id
+        cursor.execute('''
+            CREATE TABLE frases_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL DEFAULT 1,
+                texto TEXT NOT NULL,
+                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_encrypted INTEGER DEFAULT 1,
+                FOREIGN KEY (user_id) REFERENCES users (id),
+                UNIQUE(user_id, texto)
+            )
+        ''')
+        cursor.execute("INSERT INTO frases_new SELECT id, 1, texto, data_criacao, COALESCE(is_encrypted, 1) FROM frases")
+        cursor.execute("DROP TABLE frases")
+        cursor.execute("ALTER TABLE frases_new RENAME TO frases")
+    
     conn.commit()
     conn.close()
 
@@ -117,25 +160,34 @@ def create_table():
 create_table()
 
 def adicionar_frase(frase):
-    """Adiciona uma nova frase ao banco de dados (criptografada)."""
+    """Adiciona uma nova frase ao banco de dados (criptografada) para o usuário atual."""
+    if CURRENT_USER_ID is None:
+        raise ValueError("Nenhum usuário logado")
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         # Criptografa a frase antes de armazenar
         frase_criptografada = encrypt_text(frase)
-        cursor.execute("INSERT INTO frases (texto) VALUES (?)", (frase_criptografada,))
+        cursor.execute(
+            "INSERT INTO frases (user_id, texto, is_encrypted) VALUES (?, ?, 1)", 
+            (CURRENT_USER_ID, frase_criptografada)
+        )
         conn.commit()
         return True
-    except sqlite3.IntegrityError: # Captura erro de UNIQUE (frase duplicada)
+    except sqlite3.IntegrityError: # Captura erro de UNIQUE (frase duplicada para este usuário)
         return False
     finally:
         conn.close()
 
 def ler_frases(ordenacao="original"):
-    """Lê todas as frases do banco de dados com opção de ordenação (descriptografadas)."""
+    """Lê todas as frases do banco de dados do usuário atual com opção de ordenação (descriptografadas)."""
+    if CURRENT_USER_ID is None:
+        return []  # Retorna lista vazia se nenhum usuário estiver logado
+    
     conn = get_db_connection()
     cursor = conn.cursor()
-    query = "SELECT texto FROM frases"
+    query = "SELECT texto FROM frases WHERE user_id = ?"
     
     if ordenacao == "alfabetica":
         query += " ORDER BY texto ASC"
@@ -146,7 +198,7 @@ def ler_frases(ordenacao="original"):
     else: # "original" ou qualquer outra coisa
         query += " ORDER BY data_criacao ASC"
 
-    cursor.execute(query)
+    cursor.execute(query, (CURRENT_USER_ID,))
     frases_criptografadas = [row['texto'] for row in cursor.fetchall()]
     conn.close()
     
@@ -162,21 +214,24 @@ def ler_frases(ordenacao="original"):
     return frases_descriptografadas
 
 def remover_frase(frase_para_remover):
-    """Remove uma frase do banco de dados."""
+    """Remove uma frase do banco de dados do usuário atual."""
+    if CURRENT_USER_ID is None:
+        return False
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     
     # Criptografa a frase para encontrar no banco
     frase_criptografada = encrypt_text(frase_para_remover)
-    cursor.execute("DELETE FROM frases WHERE texto = ?", (frase_criptografada,))
+    cursor.execute("DELETE FROM frases WHERE texto = ? AND user_id = ?", (frase_criptografada, CURRENT_USER_ID))
     rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
     return rows_affected > 0
 
 def remover_multiplas_frases(frases_para_remover):
-    """Remove múltiplas frases do banco de dados."""
-    if not frases_para_remover:
+    """Remove múltiplas frases do banco de dados do usuário atual."""
+    if not frases_para_remover or CURRENT_USER_ID is None:
         return 0
     
     conn = get_db_connection()
@@ -187,7 +242,7 @@ def remover_multiplas_frases(frases_para_remover):
         for frase in frases_para_remover:
             # Criptografa cada frase para encontrar no banco
             frase_criptografada = encrypt_text(frase)
-            cursor.execute("DELETE FROM frases WHERE texto = ?", (frase_criptografada,))
+            cursor.execute("DELETE FROM frases WHERE texto = ? AND user_id = ?", (frase_criptografada, CURRENT_USER_ID))
             total_removed += cursor.rowcount
         conn.commit()
     except Exception as e:
@@ -376,28 +431,67 @@ def register_user(username, password):
     try:
         hashed_password = hash_password(password)
         cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, hashed_password))
+        user_id = cursor.lastrowid
         conn.commit()
+        
+        # Cria frases iniciais para o novo usuário
+        create_initial_phrases_for_user(user_id)
+        
         return True, "Usuário registrado com sucesso"
     except sqlite3.IntegrityError: # Usuário já existe
         return False, "Usuário já existe"
     finally:
         conn.close()
 
+def create_initial_phrases_for_user(user_id):
+    """Cria algumas frases iniciais para um novo usuário."""
+    frases_iniciais = [
+        "Bem-vindo ao Gerenciador de Frases!",
+        "A persistência é o caminho do êxito.",
+        "Acredite em você mesmo e tudo será possível.",
+        "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+        "Não desista! Grandes coisas levam tempo."
+    ]
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        for frase in frases_iniciais:
+            try:
+                # Criptografa a frase
+                frase_criptografada = encrypt_text(frase)
+                # Adiciona diretamente no banco para o usuário específico
+                cursor.execute(
+                    "INSERT OR IGNORE INTO frases (user_id, texto, is_encrypted) VALUES (?, ?, 1)", 
+                    (user_id, frase_criptografada)
+                )
+            except sqlite3.IntegrityError:
+                # Ignora se a frase já existe para este usuário
+                pass
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+    finally:
+        conn.close()
+
 def authenticate_user(username, password):
     """
     Autentica um usuário.
-    Retorna True se as credenciais estiverem corretas, False caso contrário.
+    Retorna o ID do usuário se as credenciais estiverem corretas, None caso contrário.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT password_hash FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT id, password_hash FROM users WHERE username = ?", (username,))
     record = cursor.fetchone()
     conn.close()
 
     if record:
+        user_id = record['id']
         stored_password_hash = record['password_hash']
-        return verify_password(password, stored_password_hash)
-    return False
+        if verify_password(password, stored_password_hash):
+            return user_id
+    return None
 
 def migrate_existing_phrases():
     """
