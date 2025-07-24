@@ -198,6 +198,34 @@ def remover_multiplas_frases(frases_para_remover):
     
     return total_removed
 
+
+def buscar_frases(termo_busca, ordenacao="original"):
+    """
+    Busca frases que contenham o termo especificado.
+    
+    Args:
+        termo_busca (str): Termo a ser buscado nas frases
+        ordenacao (str): Tipo de ordenação ("original", "alfabetica", etc.)
+    
+    Returns:
+        list: Lista de frases que contêm o termo de busca
+    """
+    if not termo_busca or termo_busca.strip() == "":
+        # Se não há termo de busca, retorna todas as frases
+        return ler_frases(ordenacao)
+    
+    # Obtém todas as frases
+    todas_frases = ler_frases(ordenacao)
+    
+    # Filtra frases que contêm o termo de busca (case-insensitive)
+    termo_lower = termo_busca.lower().strip()
+    frases_encontradas = [
+        frase for frase in todas_frases 
+        if termo_lower in frase.lower()
+    ]
+    
+    return frases_encontradas
+
 def atualizar_frase(old_texto, new_texto):
     """Atualiza uma frase no banco de dados."""
     conn = get_db_connection()

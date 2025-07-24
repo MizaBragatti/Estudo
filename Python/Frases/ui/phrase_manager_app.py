@@ -160,6 +160,16 @@ class PhraseManagerApp:
             on_change=lambda e: self.ui_handlers._update_button_states(),
         )
 
+        # Campo de busca de frases
+        self.search_input = ft.TextField(
+            label="🔍 Buscar frases...", 
+            expand=True, 
+            on_change=self._on_search_change,
+            prefix_icon=ft.Icons.SEARCH,
+            hint_text="Digite para buscar frases",
+            border_radius=8
+        )
+
         # Botões de gerenciamento de frases
         self._create_phrase_management_buttons()
         
@@ -281,6 +291,14 @@ class PhraseManagerApp:
             ft.Container(height=15),
             ft.Row(
                 controls=[
+                    self.search_input
+                ],
+                alignment=ft.MainAxisAlignment.CENTER,
+                spacing=10
+            ),
+            ft.Container(height=10),
+            ft.Row(
+                controls=[
                     ft.Column(
                         controls=[
                             self.list_view,
@@ -327,7 +345,30 @@ class PhraseManagerApp:
     def _apply_sort(self, e=None):
         """Aplica a ordenação selecionada."""
         modo_db = self.opcoes_ordenacao[self.modo_ordenacao.current.value]
-        self.phrases_data = frase_manager.ler_frases(ordenacao=modo_db)
+        
+        # Aplica busca se houver termo
+        termo_busca = self.search_input.value if hasattr(self, 'search_input') else ""
+        if termo_busca and termo_busca.strip():
+            self.phrases_data = frase_manager.buscar_frases(termo_busca, ordenacao=modo_db)
+        else:
+            self.phrases_data = frase_manager.ler_frases(ordenacao=modo_db)
+        
+        self._reload_list_view_with_sorted_phrases()
+
+    def _on_search_change(self, e):
+        """Evento chamado quando o texto de busca muda."""
+        termo_busca = e.control.value
+        
+        # Aplica a ordenação atual
+        modo_db = self.opcoes_ordenacao[self.modo_ordenacao.current.value]
+        
+        # Busca frases com o termo especificado
+        if termo_busca and termo_busca.strip():
+            self.phrases_data = frase_manager.buscar_frases(termo_busca, ordenacao=modo_db)
+        else:
+            # Se não há termo de busca, mostra todas as frases
+            self.phrases_data = frase_manager.ler_frases(ordenacao=modo_db)
+        
         self._reload_list_view_with_sorted_phrases()
 
     def _reload_list_view_with_sorted_phrases(self):

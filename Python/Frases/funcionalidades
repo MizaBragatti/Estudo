@@ -14,14 +14,15 @@ Excluir mais de uma frase, selecionando pela listagem - ok
 Adicionar tempo total dos lembretes - ok
 Permitir redimensionar a tela - ok
 Trocar o icone - ok
-Melhorar a edição - Quando seleciono uma frase para editar e dou 2 cliques em um palavra
+Melhorar a edição - Quando seleciono uma frase para editar e dou 2 cliques em um palavra - ok
 Exclusão está com problema - ok
 Botão para selecionar tudo - ok
 Melhorar os botões, que estão grudados na borda - ok
 Proteger Banco de dados - ok
 Criar Login - ok
 Tkinter - Flet - ok
-Alterar o botões, pois não estão mostrando direito se estão ativos ou não - ok
+Alterar o botões, pois não estão mostrando 
+direito se estão ativos ou não (Adicionar, Atualizar e Excluir)
 Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção - ok
 Está rolando sozinho as frases, quando ativo lembrete - ok
 Não está retornando erro de usuário inválido
@@ -33,7 +34,7 @@ Exportar frases - ok
 Remover todos debugs - ok
 Remover testes obsoletos - ok
 Botão atualizar frase com mesmo comportamento do adicionar para duplicatas - ok
-Acrescentar busca de frases
+Acrescentar busca de frases - ok
 Permitir seleção múltipla com CTRL + Clique e exclusão múltipla
 Verificar os ids no banco de dados
 Criar sistema de APIs para acessar as frases no Banco de dados
