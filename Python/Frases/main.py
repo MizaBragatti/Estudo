@@ -32,8 +32,13 @@ def main(page: ft.Page, window_width=DEFAULT_WINDOW_WIDTH, window_height=DEFAULT
     
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
+        def on_logout():
+            """Callback chamado quando o usuário faz logout."""
+            page.clean()
+            LoginScreen(page, on_login_success)
+        
         page.clean()
-        PhraseManagerApp(page, window_width, window_height)
+        PhraseManagerApp(page, window_width, window_height, on_logout=on_logout)
     
     # Limpa a página e inicia com a tela de login
     page.clean()
@@ -53,11 +58,16 @@ def main_with_position(page: ft.Page, saved_position: dict):
     
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
+        def on_logout():
+            """Callback chamado quando o usuário faz logout."""
+            page.clean()
+            LoginScreen(page, on_login_success)
+        
         page.clean()
         # Aplica a posição usando o WindowManager
         window_manager = WindowManager()
         window_manager.apply_saved_position(saved_position)
-        PhraseManagerApp(page, saved_width, saved_height)
+        PhraseManagerApp(page, saved_width, saved_height, on_logout=on_logout)
     
     # Limpa a página e inicia com a tela de login
     page.clean()

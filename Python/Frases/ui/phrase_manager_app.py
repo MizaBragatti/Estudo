@@ -24,11 +24,12 @@ except ImportError:
 class PhraseManagerApp:
     """Classe principal da aplicação de gerenciamento de frases."""
     
-    def __init__(self, page: ft.Page, window_width=700, window_height=620):
+    def __init__(self, page: ft.Page, window_width=700, window_height=620, enable_size_monitoring=False, on_logout=None):
         self.page = page
         self.page.title = "Gerenciador e Lembretes de Frases"
         self.page.vertical_alignment = ft.CrossAxisAlignment.START
         self.page.bgcolor = BACKGROUND_COLOR
+        self.on_logout = on_logout  # Callback para logout
 
         # Inicialização de variáveis
         self.intervalo_lembrete_ms = DEFAULT_INTERVAL_SECONDS * 1000
@@ -38,6 +39,7 @@ class PhraseManagerApp:
         self.frase_selecionada_para_edicao = None
         self.ctrl_pressed = False  # Flag para detectar CTRL pressionado
         self.multi_select_mode = False  # Flag para modo de seleção múltipla
+        self.enable_size_monitoring = enable_size_monitoring  # Controla se monitora tamanho da janela
         
         # Gerenciadores
         self.window_manager = WindowManager()
@@ -100,6 +102,33 @@ class PhraseManagerApp:
             self._reload_list_view_with_sorted_phrases()
             self.ui_handlers._update_button_states()
     
+    def _on_logout(self, e):
+        """Trata o logout e retorna à tela de login."""
+        try:
+            # Para qualquer lembrete ativo
+            if self.lembrete_ativo:
+                self.page.run_task(self.ui_handlers.stop_reminders_gui)
+            
+            # Para o rastreamento de coordenadas se ativo
+            if self.coordinate_tracker:
+                self.coordinate_tracker.stop_tracking()
+            
+            # Limpa a página
+            self.page.clean()
+            
+            # Se há callback de logout, chama ele para retornar ao login
+            if self.on_logout:
+                self.on_logout()
+            else:
+                # Fallback: recarrega a aplicação com tela de login
+                from ui.login_screen import LoginScreen
+                def dummy_callback():
+                    pass
+                LoginScreen(self.page, dummy_callback)
+                
+        except Exception as ex:
+            print(f"Erro durante logout: {ex}")
+    
     def _build_ui(self):
         """Constrói a interface do usuário."""
         self.page.snack_bar = ft.SnackBar(content=ft.Text(""), action="OK")
@@ -126,7 +155,7 @@ class PhraseManagerApp:
         # Botões de controle de lembretes
         self.start_button = ft.ElevatedButton(
             "Iniciar Lembretes",
-            on_click=lambda e: self.page.run_task(self.ui_handlers.start_reminders_gui, e),
+            on_click=self._on_start_reminders_click,
             bgcolor=ACCENT_COLOR,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
@@ -227,16 +256,16 @@ class PhraseManagerApp:
             "Atualizar Frase",
             on_click=self.ui_handlers.on_update_selected,
             disabled=True,
-            bgcolor=ACCENT_COLOR,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.GREY_400,
+            color=ft.Colors.GREY_600,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.delete_button = ft.ElevatedButton(
             "Excluir Frase",
             on_click=self.ui_handlers.on_delete_selected,
             disabled=True,
-            bgcolor=ft.Colors.RED_500,
-            color=ft.Colors.WHITE,
+            bgcolor=ft.Colors.GREY_400,
+            color=ft.Colors.GREY_600,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.import_button = ft.ElevatedButton(
@@ -264,6 +293,13 @@ class PhraseManagerApp:
             "Selecionar Tudo",
             on_click=self.ui_handlers.select_all_phrases,
             bgcolor=ft.Colors.INDIGO_600,
+            color=ft.Colors.WHITE,
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
+        )
+        self.logout_button = ft.ElevatedButton(
+            "Sair/Logout",
+            on_click=self._on_logout,
+            bgcolor=ft.Colors.RED_600,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
@@ -318,7 +354,9 @@ class PhraseManagerApp:
                             ft.Container(height=10),
                             self.import_button,
                             self.export_button,
-                            self.save_position_button
+                            self.save_position_button,
+                            ft.Container(height=20),
+                            self.logout_button
                         ],
                         alignment=ft.MainAxisAlignment.START,
                         horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
@@ -417,6 +455,16 @@ class PhraseManagerApp:
         self.start_button.disabled = not enabled
         self.stop_button.disabled = enabled
         
+    def toggle_timer_input_fields(self, enabled):
+        """Controla se os campos de entrada de intervalo e tempo limite estão habilitados."""
+        self.interval_entry.disabled = not enabled
+        self.timeout_entry.disabled = not enabled
+        self.page.update()
+    
+    def _on_start_reminders_click(self, e):
+        """Manipula o clique no botão de iniciar lembretes."""
+        task = self.page.run_task(self.ui_handlers.start_reminders_gui, e)
+        
     def save_current_position_gui(self, e=None):
         """Salva a posição atual quando chamado pela UI."""
         try:
@@ -460,18 +508,10 @@ class PhraseManagerApp:
         self.lembrete_ativo = False
         if self.current_reminder_task and not self.current_reminder_task.done():
             self.current_reminder_task.cancel()
-            try:
-                await self.current_reminder_task
-            except asyncio.CancelledError:
-                pass
             self.current_reminder_task = None
 
         if self.timeout_task and not self.timeout_task.done():
             self.timeout_task.cancel()
-            try:
-                await self.timeout_task
-            except asyncio.CancelledError:
-                pass
             self.timeout_task = None
 
         self.start_button.disabled = False
@@ -480,6 +520,10 @@ class PhraseManagerApp:
         self.stop_button.disabled = True
         self.stop_button.bgcolor = ft.Colors.RED_200
         self.stop_button.color = ft.Colors.GREY_700
+        
+        # Reabilita os campos de entrada quando os lembretes param
+        self.toggle_timer_input_fields(True)
+        
         self.label_lembrete.value = "Lembretes parados."
         self.page.update()
     
@@ -603,21 +647,27 @@ class PhraseManagerApp:
             self.page.window_height = height
             self.page.update()
             
-            print(f"🔧 Tamanho da janela reaplicado: {width}x{height}")
+            # Remove mensagem de debug para console mais limpo
+            # print(f"🔧 Tamanho da janela reaplicado: {width}x{height}")
             
-            # Inicia verificador contínuo para manter o tamanho
-            self.page.run_task(self._monitor_window_size, width, height)
+            # Inicia verificador contínuo para manter o tamanho (apenas se habilitado)
+            if self.enable_size_monitoring:
+                self.page.run_task(self._monitor_window_size, width, height)
             
         except Exception as e:
-            print(f"❌ Erro ao reaplicar tamanho da janela: {e}")
+            # Só loga erros críticos
+            if "access" not in str(e).lower():
+                print(f"❌ Erro ao configurar janela: {e}")
 
     async def _monitor_window_size(self, target_width, target_height):
         """Monitora e mantém o tamanho da janela."""
         try:
-            print(f"🔍 Iniciando monitoramento de tamanho: {target_width}x{target_height}")
+            # Apenas loga o início, sem mensagem no console
+            last_logged_size = (target_width, target_height)
+            significant_changes = 0
             
             while True:
-                await asyncio.sleep(3)  # Verifica a cada 3 segundos
+                await asyncio.sleep(5)  # Verifica a cada 5 segundos (menos frequente)
                 
                 # Verifica o tamanho atual via Windows API
                 try:
@@ -631,8 +681,22 @@ class PhraseManagerApp:
                         current_width = rect.right - rect.left
                         current_height = rect.bottom - rect.top
                         
-                        # Se o tamanho mudou significativamente (mais que 15px de diferença)
-                        if abs(current_width - target_width) > 15 or abs(current_height - target_height) > 15:
+                        # Threshold maior para mudanças significativas (50px em vez de 15px)
+                        width_diff = abs(current_width - target_width)
+                        height_diff = abs(current_height - target_height)
+                        
+                        if width_diff > 50 or height_diff > 50:
+                            # Só loga se a mudança for realmente significativa
+                            if (abs(current_width - last_logged_size[0]) > 100 or 
+                                abs(current_height - last_logged_size[1]) > 100):
+                                
+                                significant_changes += 1
+                                last_logged_size = (current_width, current_height)
+                                
+                                # Só mostra a cada 3 mudanças significativas para evitar spam
+                                if significant_changes % 3 == 0:
+                                    print(f"📏 Janela redimensionada: {current_width}x{current_height}")
+                            
                             # Atualiza o tamanho alvo para o tamanho atual (usuário redimensionou)
                             target_width = current_width
                             target_height = current_height
@@ -640,16 +704,15 @@ class PhraseManagerApp:
                             # Atualiza as configurações do Flet para match
                             self.page.window_width = target_width
                             self.page.window_height = target_height
-                            
-                            print(f"📏 Tamanho da janela atualizado: {target_width}x{target_height}")
-                            
-                            # Não salva automaticamente - usuário deve usar o botão "💾 Salvar Posição"
                 
                 except Exception as e:
-                    # Ignore erros de verificação, mas loga para debug
-                    print(f"⚠️ Erro na verificação de tamanho: {e}")
+                    # Silencia erros de verificação para evitar spam no console
+                    pass
                     
         except asyncio.CancelledError:
-            print("🛑 Monitoramento de tamanho interrompido")
+            # Remove mensagem de interrupção para console mais limpo
+            pass
         except Exception as e:
-            print(f"❌ Erro no monitoramento de tamanho: {e}")
+            # Só loga erros realmente importantes
+            if "access" not in str(e).lower():
+                print(f"❌ Erro no monitoramento: {e}")

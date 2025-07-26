@@ -7,7 +7,7 @@ import random
 import asyncio
 import flet as ft
 import frase_manager
-from utils.constants import ACCENT_COLOR
+from utils.constants import ACCENT_COLOR, SECONDARY_ACCENT_COLOR
 
 
 class UIHandlers:
@@ -56,13 +56,19 @@ class UIHandlers:
         input_has_text = bool(self.app.phrase_input.value.strip())
         
         # Botão Adicionar: habilitado apenas quando há texto no input e não há seleção múltipla
-        self.app.add_button.disabled = not input_has_text or has_multiple_selection
+        add_enabled = input_has_text and not has_multiple_selection
+        self.app.add_button.disabled = not add_enabled
+        self._update_button_visual_state(self.app.add_button, add_enabled, "green")
         
         # Botão Atualizar: habilitado quando há seleção simples E há texto no input
-        self.app.update_button.disabled = not has_single_selection or not input_has_text or has_multiple_selection
+        update_enabled = has_single_selection and input_has_text and not has_multiple_selection
+        self.app.update_button.disabled = not update_enabled
+        self._update_button_visual_state(self.app.update_button, update_enabled, "blue")
         
         # Botão Excluir: habilitado quando há seleção simples OU múltipla
-        self.app.delete_button.disabled = not (has_single_selection or has_multiple_selection)
+        delete_enabled = has_single_selection or has_multiple_selection
+        self.app.delete_button.disabled = not delete_enabled
+        self._update_button_visual_state(self.app.delete_button, delete_enabled, "red")
         
         # Atualiza o texto do botão de exclusão baseado no tipo de seleção
         if has_multiple_selection:
@@ -72,6 +78,26 @@ class UIHandlers:
             self.app.delete_button.text = "Excluir Frase"
         
         self.page.update()
+    
+    def _update_button_visual_state(self, button, enabled, color_theme):
+        """Atualiza o estado visual do botão baseado se está habilitado ou não."""
+        if enabled:
+            # Botão habilitado - cores normais
+            if color_theme == "green":
+                button.bgcolor = ACCENT_COLOR  # Verde
+                button.color = ft.Colors.WHITE
+            elif color_theme == "blue":
+                button.bgcolor = SECONDARY_ACCENT_COLOR  # Azul
+                button.color = ft.Colors.WHITE
+            elif color_theme == "red":
+                button.bgcolor = ft.Colors.RED_500
+                button.color = ft.Colors.WHITE
+            button.opacity = 1.0
+        else:
+            # Botão desabilitado - aparência esmaecida
+            button.bgcolor = ft.Colors.GREY_400
+            button.color = ft.Colors.GREY_600
+            button.opacity = 0.6
     
     def add_phrase_from_input(self, e):
         """Adiciona uma nova frase a partir do input."""
@@ -150,7 +176,9 @@ class UIHandlers:
             
             # Verifica se ainda há frases e para lembretes se necessário
             if not frase_manager.ler_frases() and self.app.lembrete_ativo:
-                self.page.run_task(self.app.stop_reminders_gui_async)
+                async def stop_task():
+                    await self.app.stop_reminders_gui_async()
+                self.page.run_task(stop_task)
                 self.app.label_lembrete.value = "Todas as frases foram excluídas. Lembretes parados."
                 self.page.update()
 
@@ -281,6 +309,9 @@ class UIHandlers:
         self.app.stop_button.disabled = False
         self.app.stop_button.bgcolor = ft.Colors.RED_500
         self.app.stop_button.color = ft.Colors.WHITE
+        
+        # Desabilita os campos de entrada enquanto os lembretes estão ativos
+        self.app.toggle_timer_input_fields(False)
 
         if timeout_minutes > 0:
             timeout_ms = int(timeout_minutes * 60 * 1000)
@@ -300,8 +331,12 @@ class UIHandlers:
     
     def stop_reminders_gui(self, e):
         """Para os lembretes."""
-        # Executa a função async em uma task
-        self.page.run_task(self.app.stop_reminders_gui_async)
+        # Chama diretamente o método async através de uma task simples
+        async def stop_task():
+            await self.app.stop_reminders_gui_async()
+        
+        # Executa a task
+        self.page.run_task(stop_task)
     
     async def _show_random_reminder_loop(self):
         """Loop para mostrar lembretes aleatórios."""
