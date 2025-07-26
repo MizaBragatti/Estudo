@@ -22,11 +22,11 @@ Proteger Banco de dados - ok
 Criar Login - ok
 Tkinter - Flet - ok
 Alterar o botões, pois não estão mostrando 
-direito se estão ativos ou não (Adicionar, Atualizar e Excluir)
+direito se estão ativos ou não (Adicionar, Atualizar e Excluir) - ok
 Modularizar / Reestruturar melhor, deixando o código mais separado, facilitando a manutenção - ok
 Está rolando sozinho as frases, quando ativo lembrete - ok
-Não está retornando erro de usuário inválido
-Desabilitar os campos de tempo do lembrete, quando iniciado
+Não está retornando erro de usuário inválido - ok
+Desabilitar os campos de tempo do lembrete, quando iniciado - ok
 Os botões de edição de frases não estão funcionando - ok
 Não está retornando erro de duplicidade - ok
 Adicionar Frase não está desabilitando - ok
