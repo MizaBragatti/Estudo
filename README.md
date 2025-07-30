@@ -56,3 +56,6 @@ Dedicado aos estudos
 | 22-07-2025  | Constância #21                                      | [Assistir](https://youtube.com/live/TwvKNoUOg4I)            |
 | 24-07-2025  | Constância #22                                      | [Assistir](https://youtube.com/live/fk2AUD4kz1g)            |
 | 26-07-2025  | Constância #23                                      | [Assistir](https://youtube.com/live/FHKuZ76MtSo)            |
+| 28-07-2025  | Constância #24                                      | [Assistir](https://youtube.com/live/A_tJWHVctZE)            |
+| 29-07-2025  | Constância #25                                      | [Assistir](https://youtube.com/live/YFa5RweBUhE)            |
+| 30-07-2025  | Constância #26                                      | [Assistir](https://youtube.com/live/Ey4NohnWInI)            |
