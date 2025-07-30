@@ -37,9 +37,13 @@ Botão atualizar frase com mesmo comportamento do adicionar para duplicatas - ok
 Acrescentar busca de frases - ok
 Permitir seleção múltipla com CTRL + Clique e exclusão múltipla
 Verificar os ids no banco de dados
-Criar sistema de APIs para acessar as frases no Banco de dados
+Criar sistema de APIs para acessar as frases no Banco de dados - ok
 Adicionar usuario está com problema - ok
 Quando criar um usuário novo, a lista de frases zerada - ok
-Botão para deslogar
+Botão para deslogar - ok
 Fazer rodar no mobile
 Horário de inclusão no BD está incorreto
+Campo de inclusão de frase, está redimensionando sozinho
+Frases duplicadas via API - ok
+Importar frases, incluir todas de uma vez - ok
+Montar um teste regressivo, para garantir que as funcionadalides permaneçam funcionando corretamente.

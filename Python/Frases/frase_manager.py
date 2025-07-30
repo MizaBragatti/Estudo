@@ -213,6 +213,84 @@ def ler_frases(ordenacao="original"):
     
     return frases_descriptografadas
 
+
+def ler_frases_completas(ordenacao="original"):
+    """Lê todas as frases com dados completos do usuário atual (descriptografadas)."""
+    if CURRENT_USER_ID is None:
+        return []  # Retorna lista vazia se nenhum usuário estiver logado
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT id, texto, user_id, data_criacao, is_encrypted FROM frases WHERE user_id = ?"
+    
+    if ordenacao == "alfabetica":
+        # Para ordenação alfabética, precisamos descriptografar primeiro
+        query += " ORDER BY data_criacao ASC"  # Ordenação temporária
+    elif ordenacao == "alfabetica_inversa":
+        query += " ORDER BY data_criacao ASC"  # Ordenação temporária
+    elif ordenacao == "tamanho":
+        query += " ORDER BY data_criacao ASC"  # Ordenação temporária
+    elif ordenacao == "recente":
+        query += " ORDER BY data_criacao DESC"
+    elif ordenacao == "original_inversa":
+        query += " ORDER BY data_criacao DESC"
+    else:  # "original" ou qualquer outra coisa
+        query += " ORDER BY data_criacao ASC"
+
+    cursor.execute(query, (CURRENT_USER_ID,))
+    frases_raw = cursor.fetchall()
+    conn.close()
+    
+    # Descriptografa as frases e prepara dados completos
+    frases_completas = []
+    for frase in frases_raw:
+        texto_descriptografado = decrypt_text(frase['texto'])
+        frases_completas.append({
+            'id': frase['id'],
+            'texto': texto_descriptografado,
+            'user_id': frase['user_id'],
+            'data_criacao': frase['data_criacao'],
+            'is_encrypted': frase['is_encrypted']
+        })
+    
+    # Aplica ordenação pós-descriptografia se necessário
+    if ordenacao == "alfabetica":
+        frases_completas.sort(key=lambda x: x['texto'].lower())
+    elif ordenacao == "alfabetica_inversa":
+        frases_completas.sort(key=lambda x: x['texto'].lower(), reverse=True)
+    elif ordenacao == "tamanho":
+        frases_completas.sort(key=lambda x: len(x['texto']))
+    
+    return frases_completas
+
+
+def buscar_frases_completas(termo_busca, ordenacao="original"):
+    """
+    Busca frases completas que contenham o termo especificado.
+    
+    Args:
+        termo_busca (str): Termo a ser buscado nas frases
+        ordenacao (str): Tipo de ordenação ("original", "alfabetica", etc.)
+    
+    Returns:
+        list: Lista de dicionários com dados completos das frases
+    """
+    if not termo_busca or termo_busca.strip() == "":
+        # Se não há termo de busca, retorna todas as frases completas
+        return ler_frases_completas(ordenacao)
+    
+    # Obtém todas as frases completas
+    todas_frases = ler_frases_completas(ordenacao)
+    
+    # Filtra frases que contêm o termo de busca (case-insensitive)
+    termo_lower = termo_busca.lower().strip()
+    frases_encontradas = [
+        frase for frase in todas_frases 
+        if termo_lower in frase['texto'].lower()
+    ]
+    
+    return frases_encontradas
+
 def remover_frase(frase_para_remover):
     """Remove uma frase do banco de dados do usuário atual."""
     if CURRENT_USER_ID is None:
@@ -283,19 +361,28 @@ def buscar_frases(termo_busca, ordenacao="original"):
 
 def atualizar_frase(old_texto, new_texto):
     """Atualiza uma frase no banco de dados."""
+    if CURRENT_USER_ID is None:
+        return False
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Primeiro, verifica se a nova frase já existe para evitar duplicatas
+        # Primeiro, verifica se a nova frase já existe para evitar duplicatas (considerando o usuário)
         new_texto_criptografado = encrypt_text(new_texto)
-        cursor.execute("SELECT COUNT(*) FROM frases WHERE texto = ?", (new_texto_criptografado,))
+        cursor.execute("SELECT COUNT(*) FROM frases WHERE texto = ? AND user_id = ?", (new_texto_criptografado, CURRENT_USER_ID))
         if cursor.fetchone()[0] > 0 and new_texto != old_texto:
             # Se a nova frase já existe e é diferente da antiga, não permite a atualização
             return False 
 
-        # Atualiza a frase no banco de dados
+        # Atualiza a frase no banco de dados (considerando o usuário)
         old_texto_criptografado = encrypt_text(old_texto)
-        cursor.execute("UPDATE frases SET texto = ? WHERE texto = ?", (new_texto_criptografado, old_texto_criptografado))
+        cursor.execute("UPDATE frases SET texto = ? WHERE texto = ? AND user_id = ?", (new_texto_criptografado, old_texto_criptografado, CURRENT_USER_ID))
+        
+        # Verifica se alguma linha foi afetada
+        if cursor.rowcount == 0:
+            # Nenhuma linha foi atualizada - frase original não foi encontrada
+            return False
+        
         conn.commit()
         return True
     except sqlite3.Error as e:
