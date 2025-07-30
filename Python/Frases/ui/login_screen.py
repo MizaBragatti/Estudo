@@ -1,10 +1,10 @@
 # ui/login_screen.py
 """
-Tela de login da aplicação.
+Tela de login da aplicação - usando APIs.
 """
 
 import flet as ft
-import frase_manager
+from api.internal_client import get_api_client
 from utils.constants import ACCENT_COLOR, SECONDARY_ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR
 
 
@@ -126,14 +126,15 @@ class LoginScreen:
             self.show_message("Por favor, insira usuário e senha.", is_error=True)
             return
         
-        user_id = frase_manager.authenticate_user(username, password)
-        if user_id:
-            # Define o usuário atual logado
-            frase_manager.set_current_user(user_id)
+        # Usa o cliente API em vez do frase_manager direto
+        api_client = get_api_client()
+        success, message = api_client.login(username, password)
+        
+        if success:
             self.show_message("Login bem-sucedido!")
             self.on_login_success()
         else:
-            self.show_message("Usuário ou senha inválidos.", is_error=True)
+            self.show_message(message or "Usuário ou senha inválidos.", is_error=True)
             self.password_entry.value = ""
             self.password_entry.update()
 
@@ -146,7 +147,9 @@ class LoginScreen:
             self.show_message("Por favor, insira usuário e senha para registrar.", is_error=True)
             return
         
-        success, message = frase_manager.register_user(username, password)
+        # Usa o cliente API em vez do frase_manager direto
+        api_client = get_api_client()
+        success, message = api_client.register_user(username, password)
         
         if success:
             self.show_message(f"Usuário '{username}' registrado com sucesso! Agora você pode fazer login.")

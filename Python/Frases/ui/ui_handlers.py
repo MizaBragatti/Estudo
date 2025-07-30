@@ -6,7 +6,7 @@ Manipuladores de eventos da interface do usuário.
 import random
 import asyncio
 import flet as ft
-import frase_manager
+from api.internal_client import get_api_client
 from utils.constants import ACCENT_COLOR, SECONDARY_ACCENT_COLOR
 
 
@@ -104,16 +104,23 @@ class UIHandlers:
         new_phrase = self.app.phrase_input.value.strip()
         if new_phrase:
             # Tenta adicionar a frase diretamente
-            if frase_manager.adicionar_frase(new_phrase):
+            result = get_api_client().add_phrase(new_phrase)
+            
+            if result == "Frase adicionada com sucesso!":
                 self.app.label_lembrete.value = f"✅ Frase '{new_phrase}' adicionada com sucesso!"
                 self.app.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.app.phrase_input.value = ""
                 self.app.frase_selecionada_para_edicao = None  # Limpa a seleção
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
-            else:
-                # Se falhou (provavelmente frase duplicada), mostra o alerta
+            elif result == "Frase já existe!":
+                # Se falhou (frase duplicada), mostra o alerta
                 self.app._show_duplicate_phrase_alert(new_phrase)
+            else:
+                # Outros erros (usuário não logado, etc.)
+                self.app.label_lembrete.value = f"❌ Erro: {result}"
+                self.app.label_lembrete.color = ft.Colors.RED_600
+                self.page.update()
         else:
             self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
@@ -153,14 +160,14 @@ class UIHandlers:
         def confirm_delete():
             if len(phrases_to_delete) == 1:
                 # Exclusão simples
-                success = frase_manager.remover_frase(phrases_to_delete[0])
+                success = get_api_client().delete_phrases([phrases_to_delete[0]])
                 if success:
                     self.app.label_lembrete.value = f"Frase '{phrases_to_delete[0]}' excluída com sucesso!"
                 else:
                     self.app.label_lembrete.value = f"Erro ao excluir a frase '{phrases_to_delete[0]}'."
             else:
                 # Exclusão múltipla
-                removed_count = frase_manager.remover_multiplas_frases(phrases_to_delete)
+                removed_count = get_api_client().delete_phrases(phrases_to_delete)
                 if removed_count > 0:
                     self.app.label_lembrete.value = f"{removed_count} frases excluídas com sucesso!"
                 else:
@@ -175,7 +182,7 @@ class UIHandlers:
             self.app._load_and_display_phrases_initial()
             
             # Verifica se ainda há frases e para lembretes se necessário
-            if not frase_manager.ler_frases() and self.app.lembrete_ativo:
+            if not get_api_client().get_phrases() and self.app.lembrete_ativo:
                 async def stop_task():
                     await self.app.stop_reminders_gui_async()
                 self.page.run_task(stop_task)
@@ -240,14 +247,15 @@ class UIHandlers:
             return
 
         # Verifica se a nova frase já existe (mesmo comportamento do "Adicionar")
-        existing_phrases = frase_manager.ler_frases()
+        existing_phrases = get_api_client().get_phrases()
         if new_phrase in existing_phrases:
             # Se falhou (frase duplicada), mostra o alerta imediatamente
             self.app._show_duplicate_phrase_alert(new_phrase)
             return
 
         def confirm_update():
-            if frase_manager.atualizar_frase(old_phrase, new_phrase):
+            result = get_api_client().update_phrase(old_phrase, new_phrase)
+            if result == "Frase atualizada com sucesso!":
                 self.app.label_lembrete.value = f"Frase atualizada para:\n'{new_phrase}'"
                 self.app.frase_selecionada_para_edicao = None
                 self.app.phrase_input.value = ""
@@ -255,8 +263,10 @@ class UIHandlers:
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
             else:
-                # Caso inesperado - não deveria chegar aqui se a verificação acima funcionou
-                self.page.snack_bar.content = ft.Text(f"Erro inesperado ao atualizar a frase.", color=ft.Colors.WHITE)
+                # Mostra o erro específico retornado pela API
+                self.app.label_lembrete.value = f"❌ Erro ao atualizar: {result}"
+                self.app.label_lembrete.color = ft.Colors.RED_600
+                self.page.snack_bar.content = ft.Text(f"Erro ao atualizar a frase: {result}", color=ft.Colors.WHITE)
                 self.page.snack_bar.open = True
                 self.page.update()
 
@@ -296,7 +306,7 @@ class UIHandlers:
             self.page.update()
             return
 
-        phrases_from_db = frase_manager.ler_frases()
+        phrases_from_db = get_api_client().get_phrases()
         if not phrases_from_db:
             self.app.label_lembrete.value = "Nenhuma frase cadastrada para iniciar os lembretes."
             self.page.update()
@@ -341,7 +351,7 @@ class UIHandlers:
     async def _show_random_reminder_loop(self):
         """Loop para mostrar lembretes aleatórios."""
         while self.app.lembrete_ativo:
-            phrases_current = frase_manager.ler_frases()
+            phrases_current = get_api_client().get_phrases()
             if not phrases_current:
                 self.app.label_lembrete.value = "Nenhuma frase para lembrar. Parando lembretes."
                 await self.app.stop_reminders_gui_async()

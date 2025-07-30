@@ -1,13 +1,15 @@
 # main.py
 """
-Arquivo principal da aplicação - versão modularizada.
+Arquivo principal da aplicação - versão modularizada com APIs.
 """
 
 import os
 import tracemalloc
 import warnings
 import flet as ft
-import frase_manager
+# Importa o gerenciador de API em vez do frase_manager direto
+from api.api_manager import ensure_api_running, stop_api
+from api.internal_client import create_table, create_users_table
 from utils.constants import DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT
 from utils.window_manager import WindowManager
 from ui.phrase_manager_app import PhraseManagerApp
@@ -26,9 +28,22 @@ def main(page: ft.Page, window_width=DEFAULT_WINDOW_WIDTH, window_height=DEFAULT
     page.window_width = window_width
     page.window_height = window_height
     
-    # Inicializa o banco de dados
-    frase_manager.create_table()
-    frase_manager.create_users_table()
+    # Inicializa a API e o banco de dados
+    print("🚀 Inicializando aplicação com APIs...")
+    
+    # Garante que a API esteja rodando
+    if not ensure_api_running():
+        page.add(ft.Text(
+            "❌ Erro: Não foi possível iniciar o servidor da API.\n"
+            "Verifique se as dependências estão instaladas:\n"
+            "pip install flask flask-cors requests",
+            color=ft.Colors.RED
+        ))
+        return
+    
+    # Inicializa o banco de dados (ainda usa acesso direto para criação inicial)
+    create_table()
+    create_users_table()
     
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
@@ -79,11 +94,26 @@ def main_with_position(page: ft.Page, saved_position: dict):
 
 
 if __name__ == "__main__":
-    # Carrega a posição salva se existir
-    window_manager = WindowManager()
-    saved_position = window_manager.load_saved_position()
+    import atexit
     
-    if saved_position and saved_position['x'] is not None and saved_position['y'] is not None:
-        ft.app(target=lambda page: main_with_position(page, saved_position))
-    else:
-        ft.app(target=main)
+    # Registra função de limpeza para quando a aplicação fechar
+    atexit.register(stop_api)
+    
+    try:
+        # Carrega a posição salva se existir
+        window_manager = WindowManager()
+        saved_position = window_manager.load_saved_position()
+        
+        if saved_position and saved_position['x'] is not None and saved_position['y'] is not None:
+            ft.app(target=lambda page: main_with_position(page, saved_position))
+        else:
+            ft.app(target=main)
+    except KeyboardInterrupt:
+        print("\n🛑 Aplicação interrompida pelo usuário")
+        stop_api()
+    except Exception as e:
+        print(f"❌ Erro na aplicação: {e}")
+        stop_api()
+    finally:
+        # Garante que a API seja parada
+        stop_api()

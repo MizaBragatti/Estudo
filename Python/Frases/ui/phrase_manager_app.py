@@ -1,11 +1,11 @@
 # ui/phrase_manager_app.py
 """
-Aplicação principal do gerenciador de frases.
+Aplicação principal do gerenciador de frases - usando APIs.
 """
 
 import asyncio
 import flet as ft
-import frase_manager
+from api.internal_client import get_api_client
 from utils.constants import (
     ACCENT_COLOR, SECONDARY_ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR, 
     SORT_OPTIONS, DEFAULT_INTERVAL_SECONDS
@@ -387,9 +387,9 @@ class PhraseManagerApp:
         # Aplica busca se houver termo
         termo_busca = self.search_input.value if hasattr(self, 'search_input') else ""
         if termo_busca and termo_busca.strip():
-            self.phrases_data = frase_manager.buscar_frases(termo_busca, ordenacao=modo_db)
+            self.phrases_data = get_api_client().search_phrases(termo_busca, sort_order=modo_db)
         else:
-            self.phrases_data = frase_manager.ler_frases(ordenacao=modo_db)
+            self.phrases_data = get_api_client().get_phrases(sort_order=modo_db)
         
         self._reload_list_view_with_sorted_phrases()
 
@@ -402,10 +402,10 @@ class PhraseManagerApp:
         
         # Busca frases com o termo especificado
         if termo_busca and termo_busca.strip():
-            self.phrases_data = frase_manager.buscar_frases(termo_busca, ordenacao=modo_db)
+            self.phrases_data = get_api_client().search_phrases(termo_busca, sort_order=modo_db)
         else:
             # Se não há termo de busca, mostra todas as frases
-            self.phrases_data = frase_manager.ler_frases(ordenacao=modo_db)
+            self.phrases_data = get_api_client().get_phrases(sort_order=modo_db)
         
         self._reload_list_view_with_sorted_phrases()
 
@@ -553,7 +553,7 @@ class PhraseManagerApp:
     def _import_phrases_from_file(self, file_path):
         """Importa frases de um arquivo de texto."""
         try:
-            total_lidas, total_adicionadas, total_duplicadas = frase_manager.importar_frases_de_arquivo(file_path)
+            total_lidas, total_adicionadas, total_duplicadas = get_api_client().import_phrases_from_file(file_path)
             
             if total_lidas == 0:
                 self.label_lembrete.value = "Nenhuma linha encontrada no arquivo."
@@ -607,7 +607,7 @@ class PhraseManagerApp:
     def _export_phrases_to_file(self, file_path):
         """Exporta todas as frases para um arquivo de texto."""
         try:
-            total_exportadas = frase_manager.exportar_frases_para_arquivo(file_path)
+            total_exportadas = get_api_client().export_phrases_to_file(file_path)
             
             if total_exportadas > 0:
                 self.label_lembrete.value = f"Exportação concluída! {total_exportadas} frases exportadas para {file_path}."
