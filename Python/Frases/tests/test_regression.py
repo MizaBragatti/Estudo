@@ -30,8 +30,8 @@ class TesteDatabaseRegressivo(unittest.TestCase):
         cls.test_db.close()
         
         # Salva o banco original e usa o de teste
-        cls.original_db = fm.DATABASE_PATH
-        fm.DATABASE_PATH = cls.test_db.name
+        cls.original_db = fm.DB_PATH
+        fm.DB_PATH = cls.test_db.name
         
         # Cria tabelas de teste
         fm.create_table()
@@ -40,7 +40,7 @@ class TesteDatabaseRegressivo(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Limpeza após todos os testes."""
-        fm.DATABASE_PATH = cls.original_db
+        fm.DB_PATH = cls.original_db
         os.unlink(cls.test_db.name)
     
     def setUp(self):
