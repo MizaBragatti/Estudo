@@ -177,7 +177,7 @@ class UIHandlers:
             self.app.phrase_list_manager.clear_selection()
             self.app.frase_selecionada_para_edicao = None
             self.app.phrase_input.value = ""
-            self.app.phrase_input.update()
+            # Removido phrase_input.update() duplicado - será feito em _load_and_display_phrases_initial()
             self.page.update()
             self.app._load_and_display_phrases_initial()
             
@@ -259,7 +259,7 @@ class UIHandlers:
                 self.app.label_lembrete.value = f"Frase atualizada para:\n'{new_phrase}'"
                 self.app.frase_selecionada_para_edicao = None
                 self.app.phrase_input.value = ""
-                self.app.phrase_input.update()
+                # Removido phrase_input.update() duplicado - será feito em _load_and_display_phrases_initial()
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
             else:
