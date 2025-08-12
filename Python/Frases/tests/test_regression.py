@@ -245,7 +245,7 @@ class TesteAPIRegressivo(unittest.TestCase):
         """Testa operações CRUD via API."""
         # Adiciona frase
         result = self.client.add_phrase("Frase teste API")
-        self.assertEqual(result, "Frase adicionada com sucesso!")
+        self.assertEqual(result, "PHRASE_ADDED_SUCCESS")
         
         # Lista frases
         frases = self.client.get_phrases()
@@ -272,7 +272,7 @@ class TesteAPIRegressivo(unittest.TestCase):
         """Testa detecção de frases duplicadas via API."""
         # Adiciona frase
         result = self.client.add_phrase("Frase duplicada teste")
-        self.assertEqual(result, "Frase adicionada com sucesso!")
+        self.assertEqual(result, "PHRASE_ADDED_SUCCESS")
         
         # Tenta adicionar duplicata
         result = self.client.add_phrase("Frase duplicada teste")

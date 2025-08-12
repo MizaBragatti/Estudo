@@ -106,18 +106,23 @@ class UIHandlers:
             # Tenta adicionar a frase diretamente
             result = get_api_client().add_phrase(new_phrase)
             
-            if result == self.app.language_manager.t("phrase_added_success"):
+            if result == "PHRASE_ADDED_SUCCESS":
                 self.app.label_lembrete.value = self.app.language_manager.t("phrase_added_success_detail").format(new_phrase)
                 self.app.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.app.phrase_input.value = ""
                 self.app.frase_selecionada_para_edicao = None  # Limpa a seleção
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
-            elif result == self.app.language_manager.t("phrase_already_exists"):
+            elif result == "PHRASE_ALREADY_EXISTS":
                 # Se falhou (frase duplicada), mostra o alerta
                 self.app._show_duplicate_phrase_alert(new_phrase)
+            elif result == "NOT_LOGGED_IN":
+                # Usuário não logado
+                self.app.label_lembrete.value = self.app.language_manager.t("user_not_logged")
+                self.app.label_lembrete.color = ft.Colors.RED_600
+                self.page.update()
             else:
-                # Outros erros (usuário não logado, etc.)
+                # Outros erros
                 self.app.label_lembrete.value = self.app.language_manager.t("error").format(result)
                 self.app.label_lembrete.color = ft.Colors.RED_600
                 self.page.update()
@@ -217,7 +222,7 @@ class UIHandlers:
         
         # Mostra mensagem de confirmação
         count = len(self.app.phrases_data)
-        self.app.label_lembrete.value = f"✅ {count} frases selecionadas"
+        self.app.label_lembrete.value = self.app.language_manager.t("phrases_selected").format(count)
         self.app.label_lembrete.color = ACCENT_COLOR
         self.page.update()
     
@@ -232,13 +237,13 @@ class UIHandlers:
             self.page.update()
             return
         if not new_phrase:
-            self.page.snack_bar.content = ft.Text("O campo de frase para atualização não pode estar vazio.", color=ft.Colors.WHITE)
+            self.page.snack_bar.content = ft.Text(self.app.language_manager.t("empty_phrase_update"), color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
             return
         if new_phrase == old_phrase:
             # Mesmo comportamento do botão "Adicionar" - limpa o campo e a seleção
-            self.app.label_lembrete.value = f"✅ Nenhuma alteração realizada - frase mantida!"
+            self.app.label_lembrete.value = self.app.language_manager.t("no_changes_made")
             self.app.label_lembrete.color = ACCENT_COLOR
             self.app.phrase_input.value = ""
             self.app.frase_selecionada_para_edicao = None
@@ -256,7 +261,7 @@ class UIHandlers:
         def confirm_update():
             result = get_api_client().update_phrase(old_phrase, new_phrase)
             if result == "Frase atualizada com sucesso!":
-                self.app.label_lembrete.value = f"Frase atualizada para:\n'{new_phrase}'"
+                self.app.label_lembrete.value = self.app.language_manager.t("phrase_updated").format(new_phrase)
                 self.app.frase_selecionada_para_edicao = None
                 self.app.phrase_input.value = ""
                 # Removido phrase_input.update() duplicado - será feito em _load_and_display_phrases_initial()
@@ -264,7 +269,7 @@ class UIHandlers:
                 self.app._load_and_display_phrases_initial()
             else:
                 # Mostra o erro específico retornado pela API
-                self.app.label_lembrete.value = f"❌ Erro ao atualizar: {result}"
+                self.app.label_lembrete.value = self.app.language_manager.t("update_error").format(result)
                 self.app.label_lembrete.color = ft.Colors.RED_600
                 self.page.snack_bar.content = ft.Text(f"Erro ao atualizar a frase: {result}", color=ft.Colors.WHITE)
                 self.page.snack_bar.open = True
@@ -279,30 +284,30 @@ class UIHandlers:
     async def start_reminders_gui(self, e):
         """Inicia os lembretes."""
         if self.app.lembrete_ativo:
-            self.app.label_lembrete.value = "Lembretes já estão ativos."
+            self.app.label_lembrete.value = self.app.language_manager.t("reminders_already_active")
             self.page.update()
             return
 
         try:
             interval_seconds = float(self.app.interval_entry.value)
             if interval_seconds <= 0:
-                self.app.label_lembrete.value = "O intervalo deve ser um número positivo."
+                self.app.label_lembrete.value = self.app.language_manager.t("interval_must_be_positive")
                 self.page.update()
                 return
             self.app.intervalo_lembrete_ms = int(interval_seconds * 1000)
         except ValueError:
-            self.app.label_lembrete.value = "Por favor, digite um número válido para o intervalo."
+            self.app.label_lembrete.value = self.app.language_manager.t("invalid_interval_number")
             self.page.update()
             return
 
         try:
             timeout_minutes = float(self.app.timeout_entry.value)
             if timeout_minutes < 0:
-                self.app.label_lembrete.value = "O tempo limite deve ser um número positivo ou zero para sem limite."
+                self.app.label_lembrete.value = self.app.language_manager.t("timeout_must_be_positive")
                 self.page.update()
                 return
         except ValueError:
-            self.app.label_lembrete.value = "Por favor, digite um número válido para o tempo limite."
+            self.app.label_lembrete.value = self.app.language_manager.t("invalid_timeout_number")
             self.page.update()
             return
 

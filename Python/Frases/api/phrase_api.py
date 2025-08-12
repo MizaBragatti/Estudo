@@ -155,7 +155,7 @@ def add_phrase():
                 message="Frase já existe no banco de dados",
                 status_code=409
             )
-        elif result == "Frase adicionada com sucesso!":
+        elif result == "PHRASE_ADDED_SUCCESS":
             return format_response(
                 data={"text": phrase_text},
                 message="Frase adicionada com sucesso",

@@ -108,19 +108,19 @@ class InternalAPIClient:
     def add_phrase(self, text):
         """Adiciona uma nova frase."""
         if not self.user_id:
-            return "Usuário não logado"
+            return "NOT_LOGGED_IN"
         
         data = {"text": text, "user_id": self.user_id}
         response = self._make_request('POST', '/phrases', data)
         
         if response.get('success'):
-            return "Frase adicionada com sucesso!"
+            return "PHRASE_ADDED_SUCCESS"
         else:
             message = response.get('message', 'Erro ao adicionar frase')
             # Garante que message seja uma string antes de chamar .lower()
             if isinstance(message, str) and 'já existe' in message.lower():
-                return "Frase já existe!"
-            return str(message) if message is not None else "Erro ao adicionar frase"
+                return "PHRASE_ALREADY_EXISTS"
+            return str(message) if message is not None else "ADD_PHRASE_ERROR"
     
     def import_phrases_bulk(self, phrases_list):
         """Importa múltiplas frases de uma vez via API."""
@@ -296,7 +296,7 @@ def adicionar_frase(frase):
     """Compatibilidade com frase_manager.py"""
     client = get_api_client()
     result = client.add_phrase(frase)
-    return result == "Frase adicionada com sucesso!"
+    return result == "PHRASE_ADDED_SUCCESS"
 
 def ler_frases(ordenacao="original"):
     """Compatibilidade com frase_manager.py"""

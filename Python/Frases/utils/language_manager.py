@@ -36,6 +36,7 @@ class LanguageManager:
             "login_required": "Por favor, insira usuário e senha.",
             "register_required": "Por favor, insira usuário e senha para registrar.",
             "register_success": "Usuário '{}' registrado com sucesso! Agora você pode fazer login.",
+            "user_not_logged": "❌ Usuário não está logado.",
             
             # Tela Principal
             "phrase_manager": "Gerenciador e Lembretes de Frases",
@@ -78,6 +79,10 @@ class LanguageManager:
             "interval_seconds": "Intervalo (segundos)",
             "timeout_minutes": "Tempo Limite (minutos)",
             
+            # Interface - Textos adicionais
+            "multiple_selection_info": "💡 Use o checkbox abaixo para ativar seleção múltipla",
+            "multiple_selection_mode": "Modo Seleção Múltipla",
+            
             # Tela de Configurações
             "settings_title": "⚙️ Configurações",
             "window_position": "📍 Posição da Janela",
@@ -100,6 +105,8 @@ class LanguageManager:
             "position_save_error": "❌ Erro ao salvar posição",
             "position_reset": "✅ Posição resetada com sucesso! Reinicie a aplicação para aplicar.",
             "position_reset_error": "❌ Erro ao resetar posição",
+            "position_info_format": "X: {} | Y: {} | Largura: {} | Altura: {}",
+            "current_monitor": "Monitor Atual: {}",
             "theme_changed": "✅ Tema alterado com sucesso!",
             "theme_already_active": "✅ Este tema já está ativo!",
             "theme_change_error": "❌ Erro ao alterar tema",
@@ -124,6 +131,20 @@ class LanguageManager:
             "phrase_already_exists": "Frase já existe!",
             "phrase_added_success_detail": "✅ Frase '{}' adicionada com sucesso!",
             "please_enter_phrase": "Por favor, digite uma frase para adicionar.",
+            "invalid_interval_number": "Por favor, digite um número válido para o intervalo.",
+            "invalid_timeout_number": "Por favor, digite um número válido para o tempo limite.",
+            "timeout_must_be_positive": "O tempo limite deve ser um número positivo ou zero para sem limite.",
+            "duplicate_phrase_title": "Frase Duplicada",
+            "duplicate_phrase_message": "A frase abaixo já existe na sua lista:\n\n'{}'\n\n🔍 Veja a frase destacada em laranja na lista ao lado.\nDigite uma frase diferente ou edite a existente.",
+            "ok_understood": "OK, ENTENDI",
+            "phrases_selected": "✅ {} frases selecionadas",
+            "no_changes_made": "✅ Nenhuma alteração realizada - frase mantida!",
+            "phrase_updated": "Frase atualizada para:\n'{}'",
+            "update_error": "❌ Erro ao atualizar: {}",
+            "reminders_already_active": "Lembretes já estão ativos.",
+            "interval_must_be_positive": "O intervalo deve ser um número positivo.",
+            "empty_phrase_update": "O campo de frase para atualização não pode estar vazio.",
+            "error_generic": "❌ Erro: {}",
             "please_select_phrases": "Por favor, selecione uma ou mais frases para excluir.",
             "confirm_deletion": "Confirmar Exclusão",
             "confirm_multiple_deletion": "Confirmar Exclusão Múltipla",
@@ -152,6 +173,7 @@ class LanguageManager:
             "login_required": "Please enter user and password.",
             "register_required": "Please enter user and password to register.",
             "register_success": "User '{}' registered successfully! You can now login.",
+            "user_not_logged": "❌ User is not logged in.",
             
             # Main Screen
             "phrase_manager": "Phrase Manager and Reminders",
@@ -194,6 +216,10 @@ class LanguageManager:
             "interval_seconds": "Interval (seconds)",
             "timeout_minutes": "Timeout (minutes)",
             
+            # Interface - Additional texts
+            "multiple_selection_info": "💡 Use the checkbox below to enable multiple selection",
+            "multiple_selection_mode": "Multiple Selection Mode",
+            
             # Settings Screen
             "settings_title": "⚙️ Settings",
             "window_position": "📍 Window Position",
@@ -216,6 +242,8 @@ class LanguageManager:
             "position_save_error": "❌ Error saving position",
             "position_reset": "✅ Position reset successfully! Restart application to apply.",
             "position_reset_error": "❌ Error resetting position",
+            "position_info_format": "X: {} | Y: {} | Width: {} | Height: {}",
+            "current_monitor": "Current Monitor: {}",
             "theme_changed": "✅ Theme changed successfully!",
             "theme_already_active": "✅ This theme is already active!",
             "theme_change_error": "❌ Error changing theme",
@@ -240,6 +268,20 @@ class LanguageManager:
             "phrase_already_exists": "Phrase already exists!",
             "phrase_added_success_detail": "✅ Phrase '{}' added successfully!",
             "please_enter_phrase": "Please enter a phrase to add.",
+            "invalid_interval_number": "Please enter a valid number for the interval.",
+            "invalid_timeout_number": "Please enter a valid number for the timeout.",
+            "timeout_must_be_positive": "The timeout must be a positive number or zero for no limit.",
+            "duplicate_phrase_title": "Duplicate Phrase",
+            "duplicate_phrase_message": "The phrase below already exists in your list:\n\n'{}'\n\n🔍 See the phrase highlighted in orange in the list on the side.\nEnter a different phrase or edit the existing one.",
+            "ok_understood": "OK, GOT IT",
+            "phrases_selected": "✅ {} phrases selected",
+            "no_changes_made": "✅ No changes made - phrase kept!",
+            "phrase_updated": "Phrase updated to:\n'{}'",
+            "update_error": "❌ Update error: {}",
+            "reminders_already_active": "Reminders are already active.",
+            "interval_must_be_positive": "The interval must be a positive number.",
+            "empty_phrase_update": "The phrase field for update cannot be empty.",
+            "error_generic": "❌ Error: {}",
             "please_select_phrases": "Please select one or more phrases to delete.",
             "confirm_deletion": "Confirm Deletion",
             "confirm_multiple_deletion": "Confirm Multiple Deletion",
@@ -268,6 +310,7 @@ class LanguageManager:
             "login_required": "Por favor, ingrese usuario y contraseña.",
             "register_required": "Por favor, ingrese usuario y contraseña para registrarse.",
             "register_success": "¡Usuario '{}' registrado exitosamente! Ahora puede iniciar sesión.",
+            "user_not_logged": "❌ El usuario no está conectado.",
             
             # Pantalla Principal
             "phrase_manager": "Gestor de Frases y Recordatorios",
@@ -310,6 +353,10 @@ class LanguageManager:
             "interval_seconds": "Intervalo (segundos)",
             "timeout_minutes": "Tiempo Límite (minutos)",
             
+            # Interfaz - Textos adicionales
+            "multiple_selection_info": "💡 Use la casilla de verificación a continuación para habilitar selección múltiple",
+            "multiple_selection_mode": "Modo Selección Múltiple",
+            
             # Pantalla de Configuración
             "settings_title": "⚙️ Configuración",
             "window_position": "📍 Posición de Ventana",
@@ -332,6 +379,8 @@ class LanguageManager:
             "position_save_error": "❌ Error al guardar posición",
             "position_reset": "✅ ¡Posición restablecida exitosamente! Reinicie la aplicación para aplicar.",
             "position_reset_error": "❌ Error al restablecer posición",
+            "position_info_format": "X: {} | Y: {} | Ancho: {} | Alto: {}",
+            "current_monitor": "Monitor Actual: {}",
             "theme_changed": "✅ ¡Tema cambiado exitosamente!",
             "theme_already_active": "✅ ¡Este tema ya está activo!",
             "theme_change_error": "❌ Error al cambiar tema",
@@ -356,6 +405,20 @@ class LanguageManager:
             "phrase_already_exists": "¡La frase ya existe!",
             "phrase_added_success_detail": "✅ Frase '{}' agregada exitosamente!",
             "please_enter_phrase": "Por favor, ingrese una frase para agregar.",
+            "invalid_interval_number": "Por favor, ingrese un número válido para el intervalo.",
+            "invalid_timeout_number": "Por favor, ingrese un número válido para el tiempo límite.",
+            "timeout_must_be_positive": "El tiempo límite debe ser un número positivo o cero para sin límite.",
+            "duplicate_phrase_title": "Frase Duplicada",
+            "duplicate_phrase_message": "La frase siguiente ya existe en su lista:\n\n'{}'\n\n🔍 Vea la frase resaltada en naranja en la lista al lado.\nIngrese una frase diferente o edite la existente.",
+            "ok_understood": "OK, ENTENDIDO",
+            "phrases_selected": "✅ {} frases seleccionadas",
+            "no_changes_made": "✅ No se realizaron cambios - ¡frase mantenida!",
+            "phrase_updated": "Frase actualizada a:\n'{}'",
+            "update_error": "❌ Error de actualización: {}",
+            "reminders_already_active": "Los recordatorios ya están activos.",
+            "interval_must_be_positive": "El intervalo debe ser un número positivo.",
+            "empty_phrase_update": "El campo de frase para actualización no puede estar vacío.",
+            "error_generic": "❌ Error: {}",
             "please_select_phrases": "Por favor, seleccione una o más frases para eliminar.",
             "confirm_deletion": "Confirmar Eliminación",
             "confirm_multiple_deletion": "Confirmar Eliminación Múltiple",

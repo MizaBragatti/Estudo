@@ -25,10 +25,10 @@ DEFAULT_TIMEOUT_MINUTES = 0
 ESTIMATED_ITEM_HEIGHT = 60
 VISIBLE_LIST_HEIGHT = 300
 
-# Opções de ordenação
-SORT_OPTIONS = {
-    "Ordem de Criação (Antiga para Nova)": "original",
-    "Ordem de Criação Inversa (Nova para Antiga)": "original_inversa",
-    "Ordem Alfabética (A-Z)": "alfabetica",
-    "Ordem Alfabética Inversa (Z-A)": "alfabetica_inversa"
+# Opções de ordenação (valores internos - as traduções ficam no LanguageManager)
+SORT_OPTIONS_KEYS = {
+    "sort_creation_old": "original",
+    "sort_creation_new": "original_inversa", 
+    "sort_alphabetical": "alfabetica",
+    "sort_alphabetical_reverse": "alfabetica_inversa"
 }

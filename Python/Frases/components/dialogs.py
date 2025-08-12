@@ -10,8 +10,9 @@ from utils.constants import TEXT_COLOR
 class DialogManager:
     """Classe responsável pelos diálogos da aplicação."""
     
-    def __init__(self, page: ft.Page):
+    def __init__(self, page: ft.Page, language_manager=None):
         self.page = page
+        self.language_manager = language_manager
     
     def show_confirmation_dialog(self, title: str, content: str, on_confirm, on_cancel=None):
         """Mostra um diálogo de confirmação."""
@@ -70,7 +71,7 @@ class DialogManager:
                                             ft.Icon(ft.Icons.WARNING_ROUNDED, 
                                                    color=ft.Colors.ORANGE_600, 
                                                    size=32),
-                                            ft.Text("Frase Duplicada", 
+                                            ft.Text(self.language_manager.t("duplicate_phrase_title") if self.language_manager else "Frase Duplicada", 
                                                    size=18, 
                                                    weight=ft.FontWeight.BOLD, 
                                                    color=ft.Colors.ORANGE_700)
@@ -84,10 +85,7 @@ class DialogManager:
                                 # Conteúdo principal
                                 ft.Container(
                                     content=ft.Text(
-                                        f"A frase abaixo já existe na sua lista:\n\n"
-                                        f"'{duplicate_phrase}'\n\n"
-                                        f"🔍 Veja a frase destacada em laranja na lista ao lado.\n"
-                                        f"Digite uma frase diferente ou edite a existente.",
+                                        self.language_manager.t("duplicate_phrase_message").format(duplicate_phrase) if self.language_manager else f"A frase abaixo já existe na sua lista:\n\n'{duplicate_phrase}'\n\n🔍 Veja a frase destacada em laranja na lista ao lado.\nDigite uma frase diferente ou edite a existente.",
                                         text_align=ft.TextAlign.CENTER,
                                         color=ft.Colors.GREY_700,
                                         size=14,
@@ -99,7 +97,7 @@ class DialogManager:
                                 # Botão de ação
                                 ft.Container(
                                     content=ft.ElevatedButton(
-                                        "OK, ENTENDI",
+                                        self.language_manager.t("ok_understood") if self.language_manager else "OK, ENTENDI",
                                         on_click=close_overlay,
                                         bgcolor=ft.Colors.ORANGE_600,
                                         color=ft.Colors.WHITE,

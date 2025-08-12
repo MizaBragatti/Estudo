@@ -201,7 +201,7 @@ class SettingsScreen:
             x = y = width = height = 'N/A'
         
         self.position_info = ft.Text(
-            f"X: {x} | Y: {y} | {self.language_manager.t('width')}: {width} | {self.language_manager.t('height')}: {height}",
+            self.language_manager.t("position_info_format").format(x, y, width, height),
             size=14,
             color=colors['TEXT_COLOR'],
             text_align=ft.TextAlign.CENTER
@@ -308,7 +308,7 @@ class SettingsScreen:
             else:
                 self._show_message(self.language_manager.t("position_save_error"), True)
         except Exception as ex:
-            self._show_message(f"❌ Erro: {ex}", True)
+            self._show_message(self.language_manager.t("error_generic").format(ex), True)
     
     def _reset_position(self, e):
         """Reseta a posição da janela para o padrão."""
@@ -320,7 +320,7 @@ class SettingsScreen:
             else:
                 self._show_message(self.language_manager.t("position_reset_error"), True)
         except Exception as ex:
-            self._show_message(f"❌ Erro: {ex}", True)
+            self._show_message(self.language_manager.t("error_generic").format(ex), True)
     
     def _change_theme(self, theme_name):
         """Muda o tema da aplicação."""
@@ -340,7 +340,7 @@ class SettingsScreen:
             else:
                 self._show_message(self.language_manager.t("theme_change_error"), True)
         except Exception as ex:
-            self._show_message(f"❌ Erro: {ex}", True)
+            self._show_message(self.language_manager.t("error_generic").format(ex), True)
     
     def _change_language(self, language):
         """Muda o idioma da aplicação."""
@@ -362,7 +362,7 @@ class SettingsScreen:
             else:
                 self._show_message(self.language_manager.t("language_change_error"), True)
         except Exception as ex:
-            self._show_message(f"❌ Erro: {ex}", True)
+            self._show_message(self.language_manager.t("error_generic").format(ex), True)
     
     def _rebuild_interface(self):
         """Reconstrói toda a interface com as traduções atuais."""
@@ -379,6 +379,9 @@ class SettingsScreen:
         # Atualiza os botões de idioma com o novo texto
         self._update_language_buttons()
         
+        # Atualiza as informações de posição com o novo idioma
+        self._update_position_info()
+        
         self.page.update()
     
     def _update_position_info(self):
@@ -391,8 +394,8 @@ class SettingsScreen:
             height = position_info.get('height', 'N/A')
             monitor = position_info.get('monitor', 'N/A')
             
-            self.position_info.value = f"X: {x} | Y: {y} | Largura: {width} | Altura: {height}"
-            self.monitor_info.value = f"Monitor Atual: {monitor}"
+            self.position_info.value = self.language_manager.t("position_info_format").format(x, y, width, height)
+            self.monitor_info.value = self.language_manager.t("current_monitor").format(monitor)
             
             self.position_info.update()
             self.monitor_info.update()

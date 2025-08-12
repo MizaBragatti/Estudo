@@ -8,7 +8,7 @@ import flet as ft
 from api.internal_client import get_api_client
 from utils.constants import (
     ACCENT_COLOR, SECONDARY_ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR, 
-    SORT_OPTIONS, DEFAULT_INTERVAL_SECONDS
+    SORT_OPTIONS_KEYS, DEFAULT_INTERVAL_SECONDS
 )
 from utils.theme_manager import ThemeManager
 from utils.language_manager import LanguageManager
@@ -50,7 +50,7 @@ class PhraseManagerApp:
         
         # Gerenciadores
         self.window_manager = WindowManager()
-        self.dialog_manager = DialogManager(page)
+        self.dialog_manager = DialogManager(page, self.language_manager)
         self.ui_handlers = UIHandlers(self)
 
         # Configura o evento de fechamento da janela para salvar posição/tamanho
@@ -59,8 +59,8 @@ class PhraseManagerApp:
         # Configura eventos de teclado para detectar CTRL
         self.page.on_keyboard_event = self._on_keyboard_event
 
-        # Opções de ordenação
-        self.opcoes_ordenacao = SORT_OPTIONS
+        # Inicialização das opções de ordenação com traduções
+        self._init_sort_options()
         self.modo_ordenacao = ft.Ref[ft.Dropdown]()
 
         # Constrói a interface
@@ -78,6 +78,13 @@ class PhraseManagerApp:
         # Atualiza cores dos campos de entrada se já existirem
         if hasattr(self, 'interval_entry'):
             self._update_input_field_colors()
+    
+    def _init_sort_options(self):
+        """Inicializa as opções de ordenação com traduções."""
+        self.opcoes_ordenacao = {}
+        for sort_key, sort_value in SORT_OPTIONS_KEYS.items():
+            translated_text = self.language_manager.t(sort_key)
+            self.opcoes_ordenacao[translated_text] = sort_value
     
     def _update_input_field_colors(self):
         """Atualiza as cores dos campos de entrada com o tema atual."""
@@ -200,6 +207,10 @@ class PhraseManagerApp:
             self.search_input.label = self.language_manager.t("search_phrases")
             self.search_input.hint_text = self.language_manager.t("search_placeholder")
         
+        # Atualiza campo de entrada de frases
+        if hasattr(self, 'phrase_input'):
+            self.phrase_input.label = self.language_manager.t("phrase")
+        
         # Atualiza botões de gerenciamento
         if hasattr(self, 'add_button'):
             self.add_button.text = self.language_manager.t("add_phrase")
@@ -235,7 +246,7 @@ class PhraseManagerApp:
         colors = self.theme_manager.get_theme_colors()
         
         self.interval_entry = ft.TextField(
-            value="5", label="Intervalo (segundos)", width=120,
+            value="5", label=self.language_manager.t("interval_seconds"), width=120,
             keyboard_type=ft.KeyboardType.NUMBER,
             text_align=ft.TextAlign.CENTER,
             color=colors['TEXT_COLOR'],
@@ -243,7 +254,7 @@ class PhraseManagerApp:
             border_color=colors['BORDER_COLOR']
         )
         self.timeout_entry = ft.TextField(
-            value="0", label="Tempo Limite (minutos)", width=120,
+            value="0", label=self.language_manager.t("timeout_minutes"), width=120,
             keyboard_type=ft.KeyboardType.NUMBER,
             text_align=ft.TextAlign.CENTER,
             color=colors['TEXT_COLOR'],
@@ -284,7 +295,7 @@ class PhraseManagerApp:
 
         # Campo de entrada de frases com cores do tema
         self.phrase_input = ft.TextField(
-            label="Frase", expand=True, multiline=True, min_lines=1, max_lines=3,
+            label=self.language_manager.t("phrase"), expand=True, multiline=True, min_lines=1, max_lines=3,
             on_change=lambda e: self.ui_handlers._update_button_states(),
             color=colors['TEXT_COLOR'],
             label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
@@ -316,7 +327,7 @@ class PhraseManagerApp:
             options=options,
             value=list(self.opcoes_ordenacao.keys())[0],
             on_change=self._apply_sort,
-            label="Ordenar por",
+            label=self.language_manager.t("sort_by"),
             width=280,
             color=colors['TEXT_COLOR'],
             label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
@@ -335,13 +346,13 @@ class PhraseManagerApp:
         
         # Texto de instrução para seleção múltipla
         self.multi_select_info = ft.Text(
-            "💡 Use o checkbox abaixo para ativar seleção múltipla",
+            self.language_manager.t("multiple_selection_info"),
             size=12, italic=True, color=ft.Colors.GREY_600
         )
         
         # Checkbox para modo de seleção múltipla
         self.multi_select_checkbox = ft.Checkbox(
-            label="Modo Seleção Múltipla",
+            label=self.language_manager.t("multiple_selection_mode"),
             value=False,
             on_change=self._on_multi_select_mode_change
         )
@@ -415,11 +426,11 @@ class PhraseManagerApp:
             ft.Container(height=15),
             reminder_config_row,
             ft.Divider(height=30, thickness=2, color=colors['BORDER_COLOR']),
-            ft.Text("Gerenciamento de Frases", size=18, weight=ft.FontWeight.BOLD, color=colors['TEXT_COLOR']),
+            ft.Text(self.language_manager.t("phrase_management"), size=18, weight=ft.FontWeight.BOLD, color=colors['TEXT_COLOR']),
             ft.Container(height=15),
             ft.Row(
                 controls=[
-                    ft.Text("Ordenar por:", color=colors['TEXT_COLOR']),
+                    ft.Text(self.language_manager.t("sort_by"), color=colors['TEXT_COLOR']),
                     self.sort_dropdown
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
