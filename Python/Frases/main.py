@@ -71,6 +71,27 @@ def main_with_position(page: ft.Page, saved_position: dict):
     page.window_height = saved_height
     page.update()  # Force a atualização do tamanho
     
+    # Aplica a posição usando o WindowManager
+    window_manager = WindowManager()
+    window_manager.apply_window_position_and_size(saved_position)
+    
+    # Inicializa a API e o banco de dados
+    print("🚀 Inicializando aplicação com APIs...")
+    
+    # Garante que a API esteja rodando
+    if not ensure_api_running():
+        page.add(ft.Text(
+            "❌ Erro: Não foi possível iniciar o servidor da API.\n"
+            "Verifique se as dependências estão instaladas:\n"
+            "pip install flask flask-cors requests",
+            color=ft.Colors.RED
+        ))
+        return
+    
+    # Inicializa o banco de dados
+    create_table()
+    create_users_table()
+    
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
         def on_logout():
@@ -81,16 +102,12 @@ def main_with_position(page: ft.Page, saved_position: dict):
         page.clean()
         # Aplica a posição usando o WindowManager
         window_manager = WindowManager()
-        window_manager.apply_saved_position(saved_position)
+        window_manager.apply_window_position_and_size(saved_position)
         PhraseManagerApp(page, saved_width, saved_height, on_logout=on_logout)
     
     # Limpa a página e inicia com a tela de login
     page.clean()
     LoginScreen(page, on_login_success)
-    window_manager.apply_window_position_and_size(saved_position)
-    
-    # Chama a função main com as dimensões salvas
-    main(page, saved_width, saved_height)
 
 
 if __name__ == "__main__":

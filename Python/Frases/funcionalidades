@@ -46,6 +46,23 @@ Campo de inclusão de frase, está redimensionando sozinho - ok
 Frases duplicadas via API - ok
 Importar frases, incluir todas de uma vez - ok
 Montar um teste regressivo, para garantir que as funcionadalides permaneçam funcionando corretamente. - ok
-Criar uma tela para configuração (dimensionar, posicionar, cores)
+Criar uma tela para configuração (dimensionar, posicionar, cores) - ok
 Unificar documentação em Markdown
-Liberar os campos do login após verificação
+Liberar os campos do login após verificação (/health) - ok
+Campo de inserir frase deve se redimensionar conforme tamanho da frase
+Não está alterando o tema (escuro) da tela principal - ok
+O botão resetar posição parece sem ação - ok
+Os botões de tema parece estarem invertidos - ok
+No tema escuro as letras precisam mudar - ok
+Implementar um gerador de frases com IA
+As letras internas dos campos continuam não legiveis. - ok
+Tradutor das frases
+Buscar um contexto na internet sobre a frase
+Na tela de configuração ter uma opção para selecionar o tema e pre-visualizar como ficará 
+Traduzir o app e ter a opção de escolher a lingua - ok
+A lista de frases está com texto preto e o texto do checkbox
+O botão Select all quando clicado, mudar para desselect all
+Titulo da página de configuração continua com problema - ok
+Os botões para mudar a linguagem, não estão mudando o texto. - ok
+Analisar todos os texto da interface para que sejam dinamicos conforme internacionalização - ok
+Implementar loading ao carregar as frases

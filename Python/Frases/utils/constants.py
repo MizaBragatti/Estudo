@@ -5,7 +5,7 @@ Constantes e configurações da aplicação.
 
 import flet as ft
 
-# Cores da aplicação
+# Cores da aplicação (padrão - tema claro)
 ACCENT_COLOR = ft.Colors.GREEN_500
 SECONDARY_ACCENT_COLOR = ft.Colors.BLUE_400
 BACKGROUND_COLOR = ft.Colors.GREY_100

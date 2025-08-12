@@ -11,13 +11,16 @@ import subprocess
 from typing import Optional
 
 class APIManager:
-    """Gerencia o servidor da API automaticamente."""
+    """Gerencia o servidor da API automaticamente com health check otimizado."""
     
     def __init__(self, api_port=5000):
         self.api_port = api_port
         self.api_thread: Optional[threading.Thread] = None
         self.api_process: Optional[subprocess.Popen] = None
         self.is_running = False
+        self.last_health_check = 0  # Timestamp do último health check
+        self.health_check_interval = 30  # Segundos entre health checks
+        self.api_status_cache = False  # Cache do status da API
         
     def start_api_server(self, background=True):
         """Inicia o servidor da API."""
@@ -70,13 +73,23 @@ class APIManager:
         except Exception as e:
             print(f"Erro ao iniciar processo da API: {e}")
     
-    def _check_api_health(self):
-        """Verifica se a API está funcionando."""
+    def _check_api_health(self, force_check=False):
+        """Verifica se a API está funcionando com cache inteligente."""
+        current_time = time.time()
+        
+        # Se não forçar e o cache ainda for válido, retorna o status em cache
+        if not force_check and (current_time - self.last_health_check) < self.health_check_interval:
+            return self.api_status_cache
+        
         try:
             import requests
             response = requests.get(f'http://localhost:{self.api_port}/api/v1/health', timeout=5)
-            return response.status_code == 200
+            self.api_status_cache = response.status_code == 200
+            self.last_health_check = current_time
+            return self.api_status_cache
         except:
+            self.api_status_cache = False
+            self.last_health_check = current_time
             return False
     
     def stop_api_server(self):
@@ -94,9 +107,9 @@ class APIManager:
                     pass
             self.api_process = None
     
-    def ensure_api_running(self):
-        """Garante que a API esteja rodando."""
-        if not self.is_running or not self._check_api_health():
+    def ensure_api_running(self, force_check=False):
+        """Garante que a API esteja rodando com cache inteligente."""
+        if not self.is_running or not self._check_api_health(force_check):
             print("🚀 Iniciando servidor da API...")
             return self.start_api_server()
         return True

@@ -144,3 +144,58 @@ class WindowManager:
         
         # Move a janela em uma thread separada
         threading.Thread(target=move_window_smoothly, daemon=True).start()
+    
+    def get_current_position_info(self):
+        """Obtém informações detalhadas da posição atual da janela."""
+        try:
+            x, y, width, height = self.get_window_position()
+            monitor = self.detect_monitor(x)
+            
+            return {
+                'x': x,
+                'y': y,
+                'width': width,
+                'height': height,
+                'monitor': monitor
+            }
+        except Exception as e:
+            print(f"Erro ao obter informações de posição: {e}")
+            return {
+                'x': 'N/A',
+                'y': 'N/A',
+                'width': 'N/A',
+                'height': 'N/A',
+                'monitor': 'N/A'
+            }
+    
+    def save_current_position(self):
+        """Salva a posição atual da janela."""
+        try:
+            return self.save_window_position()
+        except Exception as e:
+            print(f"Erro ao salvar posição atual: {e}")
+            return False
+    
+    def reset_position(self):
+        """Reseta a posição da janela para os valores padrão."""
+        try:
+            # Remove o arquivo de configuração se existir
+            if os.path.exists(self.config_file):
+                os.remove(self.config_file)
+            
+            # Cria uma nova configuração com valores padrão
+            default_config = {
+                'x': 100,
+                'y': 100,
+                'width': DEFAULT_WINDOW_WIDTH,
+                'height': DEFAULT_WINDOW_HEIGHT,
+                'saved_at': datetime.datetime.now().isoformat()
+            }
+            
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(default_config, f, indent=2, ensure_ascii=False)
+            
+            return True
+        except Exception as e:
+            print(f"Erro ao resetar posição: {e}")
+            return False
