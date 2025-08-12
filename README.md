@@ -43,12 +43,12 @@ Dedicado aos estudos
 | 04-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/Y_b8SSE-YOw)            |
 | 06-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/iZxLxSWZsXc)            |
 | 08-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/fgcr5EHM9Cc)            |
-| 09-07-2025  | Constância #11                                      | [Assistir](https://youtube.com/live/_2Ux6x4w6wA)            |
-| 11-07-2025  | Constância #12                                      | [Assistir](https://youtube.com/live/LZeVmbbIHD4)            |
-| 12-07-2025  | Constância #13                                      | [Assistir](https://youtube.com/live/ENLp3r0WQpI)            |
-| 13-07-2025  | Constância #14                                      | [Assistir](https://youtube.com/live/fEMaqSIGBTA)            |
-| 14-07-2025  | Constância #15                                      | [Assistir](https://youtube.com/live/MM1Vg5CMBq4)            |
-| 15-07-2025  | Constância #16                                      | [Assistir](https://youtube.com/live/ybq1fPuNs_8)            |
+| 09-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/_2Ux6x4w6wA)            |
+| 11-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/LZeVmbbIHD4)            |
+| 12-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/ENLp3r0WQpI)            |
+| 13-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/fEMaqSIGBTA)            |
+| 14-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/MM1Vg5CMBq4)            |
+| 15-07-2025  | Praticando                                          | [Assistir](https://youtube.com/live/ybq1fPuNs_8)            |
 | 16-07-2025  | Constância #17                                      | [Assistir](https://youtube.com/live/jq0ha2pkJ2Q)            |
 | 18-07-2025  | Constância #18                                      | [Assistir](https://youtube.com/live/CMCN_SdSdyI)            |
 | 20-07-2025  | Constância #19                                      | [Assistir](https://youtube.com/live/sChddJfF6mM)            |
@@ -61,3 +61,11 @@ Dedicado aos estudos
 | 30-07-2025  | Constância #26                                      | [Assistir](https://youtube.com/live/Ey4NohnWInI)            |
 | 31-07-2025  | Constância #27                                      | [Assistir](https://youtube.com/live/0Ote_PBXQgY)            |
 | 01-08-2025  | Constância #28                                      | [Assistir](https://youtube.com/live/sMfoFApiW9U)            |
+| 02-08-2025  | Constância #29                                      | [Assistir](https://youtube.com/live/g-H5lL1iERo)            |
+| 04-08-2025  | Constância #30                                      | [Assistir](https://youtube.com/live/oIp7y1cMgQE)            |
+| 05-08-2025  | Constância #31                                      | [Assistir](https://youtube.com/live/d5GvX6hMVlw)            |
+| 06-08-2025  | Constância #32                                      | [Assistir](https://youtube.com/live/JgaOOwUAs1s)            |
+| 08-08-2025  | Constância #33                                      | [Assistir](https://youtube.com/live/H-8G79J2Z0A)            |
+| 10-08-2025  | Constância #34                                      | [Assistir](https://youtube.com/live/8UDstIBYhXo)            |
+| 11-08-2025  | Constância #35                                      | [Assistir](https://youtube.com/live/nks-xSKpWJE)            |
+| 12-08-2025  | Constância #36                                      | [Assistir](https://youtube.com/live/IQfLXyTPvJ4)            |

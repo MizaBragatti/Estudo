@@ -127,7 +127,7 @@ def create_table():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 texto TEXT NOT NULL,
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                data_criacao TIMESTAMP DEFAULT (datetime('now', 'localtime')),
                 is_encrypted INTEGER DEFAULT 1,
                 FOREIGN KEY (user_id) REFERENCES users (id),
                 UNIQUE(user_id, texto)
@@ -143,7 +143,7 @@ def create_table():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL DEFAULT 1,
                 texto TEXT NOT NULL,
-                data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                data_criacao TIMESTAMP DEFAULT (datetime('now', 'localtime')),
                 is_encrypted INTEGER DEFAULT 1,
                 FOREIGN KEY (user_id) REFERENCES users (id),
                 UNIQUE(user_id, texto)

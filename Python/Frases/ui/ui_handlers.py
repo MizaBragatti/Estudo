@@ -73,9 +73,9 @@ class UIHandlers:
         # Atualiza o texto do botão de exclusão baseado no tipo de seleção
         if has_multiple_selection:
             selected_count = len(self.app.phrase_list_manager.get_selected_phrases())
-            self.app.delete_button.text = f"Excluir {selected_count} Frases"
+            self.app.delete_button.text = self.app.language_manager.t("delete_multiple_phrases").format(selected_count)
         else:
-            self.app.delete_button.text = "Excluir Frase"
+            self.app.delete_button.text = self.app.language_manager.t("delete_single_phrase")
         
         self.page.update()
     
@@ -106,23 +106,23 @@ class UIHandlers:
             # Tenta adicionar a frase diretamente
             result = get_api_client().add_phrase(new_phrase)
             
-            if result == "Frase adicionada com sucesso!":
-                self.app.label_lembrete.value = f"✅ Frase '{new_phrase}' adicionada com sucesso!"
+            if result == self.app.language_manager.t("phrase_added_success"):
+                self.app.label_lembrete.value = self.app.language_manager.t("phrase_added_success_detail").format(new_phrase)
                 self.app.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.app.phrase_input.value = ""
                 self.app.frase_selecionada_para_edicao = None  # Limpa a seleção
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
-            elif result == "Frase já existe!":
+            elif result == self.app.language_manager.t("phrase_already_exists"):
                 # Se falhou (frase duplicada), mostra o alerta
                 self.app._show_duplicate_phrase_alert(new_phrase)
             else:
                 # Outros erros (usuário não logado, etc.)
-                self.app.label_lembrete.value = f"❌ Erro: {result}"
+                self.app.label_lembrete.value = self.app.language_manager.t("error").format(result)
                 self.app.label_lembrete.color = ft.Colors.RED_600
                 self.page.update()
         else:
-            self.page.snack_bar.content = ft.Text("Por favor, digite uma frase para adicionar.", color=ft.Colors.WHITE)
+            self.page.snack_bar.content = ft.Text(self.app.language_manager.t("please_enter_phrase"), color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
     
@@ -141,37 +141,37 @@ class UIHandlers:
             phrases_to_delete = [single_selected_phrase]
         
         if not phrases_to_delete:
-            self.page.snack_bar.content = ft.Text("Por favor, selecione uma ou mais frases para excluir.", color=ft.Colors.WHITE)
+            self.page.snack_bar.content = ft.Text(self.app.language_manager.t("please_select_phrases"), color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
             return
 
         # Monta a mensagem de confirmação
         if len(phrases_to_delete) == 1:
-            title = "Confirmar Exclusão"
-            message = f"Tem certeza que deseja excluir a frase:\n'{phrases_to_delete[0]}'?"
+            title = self.app.language_manager.t("confirm_deletion")
+            message = self.app.language_manager.t("confirm_delete_single").format(phrases_to_delete[0])
         else:
-            title = "Confirmar Exclusão Múltipla"
+            title = self.app.language_manager.t("confirm_multiple_deletion")
             phrase_list = '\n'.join([f"• {phrase}" for phrase in phrases_to_delete[:5]])  # Mostra até 5 frases
             if len(phrases_to_delete) > 5:
-                phrase_list += f"\n... e mais {len(phrases_to_delete) - 5} frases"
-            message = f"Tem certeza que deseja excluir {len(phrases_to_delete)} frases?\n\n{phrase_list}"
+                phrase_list += f"\n{self.app.language_manager.t('and_more_phrases').format(len(phrases_to_delete) - 5)}"
+            message = self.app.language_manager.t("confirm_delete_multiple").format(len(phrases_to_delete), phrase_list)
 
         def confirm_delete():
             if len(phrases_to_delete) == 1:
                 # Exclusão simples
                 success = get_api_client().delete_phrases([phrases_to_delete[0]])
                 if success:
-                    self.app.label_lembrete.value = f"Frase '{phrases_to_delete[0]}' excluída com sucesso!"
+                    self.app.label_lembrete.value = self.app.language_manager.t("phrase_deleted_success").format(phrases_to_delete[0])
                 else:
-                    self.app.label_lembrete.value = f"Erro ao excluir a frase '{phrases_to_delete[0]}'."
+                    self.app.label_lembrete.value = self.app.language_manager.t("phrase_delete_error").format(phrases_to_delete[0])
             else:
                 # Exclusão múltipla
                 removed_count = get_api_client().delete_phrases(phrases_to_delete)
                 if removed_count > 0:
-                    self.app.label_lembrete.value = f"{removed_count} frases excluídas com sucesso!"
+                    self.app.label_lembrete.value = self.app.language_manager.t("phrases_deleted_success").format(removed_count)
                 else:
-                    self.app.label_lembrete.value = "Erro ao excluir as frases selecionadas."
+                    self.app.label_lembrete.value = self.app.language_manager.t("phrases_delete_error")
             
             # Limpa as seleções
             self.app.phrase_list_manager.clear_selection()
@@ -186,7 +186,7 @@ class UIHandlers:
                 async def stop_task():
                     await self.app.stop_reminders_gui_async()
                 self.page.run_task(stop_task)
-                self.app.label_lembrete.value = "Todas as frases foram excluídas. Lembretes parados."
+                self.app.label_lembrete.value = self.app.language_manager.t("all_phrases_deleted")
                 self.page.update()
 
         self.app.dialog_manager.show_confirmation_dialog(title, message, confirm_delete)

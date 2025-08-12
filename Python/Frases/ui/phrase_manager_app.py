@@ -10,6 +10,8 @@ from utils.constants import (
     ACCENT_COLOR, SECONDARY_ACCENT_COLOR, BACKGROUND_COLOR, TEXT_COLOR, 
     SORT_OPTIONS, DEFAULT_INTERVAL_SECONDS
 )
+from utils.theme_manager import ThemeManager
+from utils.language_manager import LanguageManager
 from utils.window_manager import WindowManager
 from components.dialogs import DialogManager
 from components.phrase_list import PhraseListManager
@@ -18,7 +20,7 @@ from ui.ui_handlers import UIHandlers
 try:
     from coordinate_tracker import CoordinateTracker
 except ImportError:
-    CoordinateTracker = None
+    CoordinateTracker = None  # Mantém compatibilidade se não estiver disponível
 
 
 class PhraseManagerApp:
@@ -26,9 +28,14 @@ class PhraseManagerApp:
     
     def __init__(self, page: ft.Page, window_width=700, window_height=620, enable_size_monitoring=False, on_logout=None):
         self.page = page
-        self.page.title = "Gerenciador e Lembretes de Frases"
+        self.theme_manager = ThemeManager()
+        self.language_manager = LanguageManager()
+        
+        # Aplica o tema atual
+        self._apply_current_theme()
+        
+        self.page.title = self.language_manager.t("app_title")
         self.page.vertical_alignment = ft.CrossAxisAlignment.START
-        self.page.bgcolor = BACKGROUND_COLOR
         self.on_logout = on_logout  # Callback para logout
 
         # Inicialização de variáveis
@@ -45,9 +52,6 @@ class PhraseManagerApp:
         self.window_manager = WindowManager()
         self.dialog_manager = DialogManager(page)
         self.ui_handlers = UIHandlers(self)
-        
-        # Inicializa o rastreador de coordenadas se disponível
-        self.coordinate_tracker = CoordinateTracker(page) if CoordinateTracker else None
 
         # Configura o evento de fechamento da janela para salvar posição/tamanho
         self.page.on_window_event = self._on_window_event
@@ -65,10 +69,56 @@ class PhraseManagerApp:
         
         # Aplica o tamanho da janela com delay para garantir que seja respeitado
         self.page.run_task(self._apply_window_size_delayed, window_width, window_height)
+    
+    def _apply_current_theme(self):
+        """Aplica o tema atual à página."""
+        colors = self.theme_manager.get_theme_colors()
+        self.page.bgcolor = colors['BACKGROUND_COLOR']
         
-        # Inicia o rastreamento de coordenadas se disponível
-        if self.coordinate_tracker:
-            self.page.run_task(self._start_coordinate_tracking)
+        # Atualiza cores dos campos de entrada se já existirem
+        if hasattr(self, 'interval_entry'):
+            self._update_input_field_colors()
+    
+    def _update_input_field_colors(self):
+        """Atualiza as cores dos campos de entrada com o tema atual."""
+        colors = self.theme_manager.get_theme_colors()
+        
+        # Atualiza campos de lembretes
+        if hasattr(self, 'interval_entry'):
+            self.interval_entry.color = colors['TEXT_COLOR']
+            self.interval_entry.label_style = ft.TextStyle(color=colors['TEXT_COLOR'])
+            self.interval_entry.border_color = colors['BORDER_COLOR']
+            self.interval_entry.update()
+        
+        if hasattr(self, 'timeout_entry'):
+            self.timeout_entry.color = colors['TEXT_COLOR']
+            self.timeout_entry.label_style = ft.TextStyle(color=colors['TEXT_COLOR'])
+            self.timeout_entry.border_color = colors['BORDER_COLOR']
+            self.timeout_entry.update()
+        
+        # Atualiza campo de entrada de frases
+        if hasattr(self, 'phrase_input'):
+            self.phrase_input.color = colors['TEXT_COLOR']
+            self.phrase_input.label_style = ft.TextStyle(color=colors['TEXT_COLOR'])
+            self.phrase_input.border_color = colors['BORDER_COLOR']
+            self.phrase_input.fill_color = colors['SURFACE_COLOR']
+            self.phrase_input.update()
+        
+        # Atualiza campo de busca
+        if hasattr(self, 'search_input'):
+            self.search_input.color = colors['TEXT_COLOR']
+            self.search_input.label_style = ft.TextStyle(color=colors['TEXT_COLOR'])
+            self.search_input.border_color = colors['BORDER_COLOR']
+            self.search_input.fill_color = colors['SURFACE_COLOR']
+            self.search_input.update()
+        
+        # Atualiza dropdown de ordenação
+        if hasattr(self, 'sort_dropdown'):
+            self.sort_dropdown.color = colors['TEXT_COLOR']
+            self.sort_dropdown.label_style = ft.TextStyle(color=colors['TEXT_COLOR'])
+            self.sort_dropdown.border_color = colors['BORDER_COLOR']
+            self.sort_dropdown.fill_color = colors['SURFACE_COLOR']
+            self.sort_dropdown.update()
     
     def _on_window_event(self, e):
         """Trata eventos da janela, especialmente o fechamento."""
@@ -109,10 +159,6 @@ class PhraseManagerApp:
             if self.lembrete_ativo:
                 self.page.run_task(self.ui_handlers.stop_reminders_gui)
             
-            # Para o rastreamento de coordenadas se ativo
-            if self.coordinate_tracker:
-                self.coordinate_tracker.stop_tracking()
-            
             # Limpa a página
             self.page.clean()
             
@@ -129,39 +175,92 @@ class PhraseManagerApp:
         except Exception as ex:
             print(f"Erro durante logout: {ex}")
     
+    def update_language(self):
+        """Atualiza o idioma da interface."""
+        self.page.title = self.language_manager.t("app_title")
+        # Atualiza outros elementos da UI que precisam de tradução
+        self._update_ui_labels()
+        self.page.update()
+    
+    def _update_ui_labels(self):
+        """Atualiza os labels da interface com as traduções atuais."""
+        if hasattr(self, 'label_lembrete'):
+            # Atualiza apenas se o lembrete não estiver ativo
+            if not self.lembrete_ativo:
+                self.label_lembrete.value = self.language_manager.t("click_start_reminders")
+        
+        # Atualiza botões de lembrete
+        if hasattr(self, 'start_button'):
+            self.start_button.text = self.language_manager.t("start_reminders")
+        if hasattr(self, 'stop_button'):
+            self.stop_button.text = self.language_manager.t("stop_reminders")
+        
+        # Atualiza campo de busca
+        if hasattr(self, 'search_input'):
+            self.search_input.label = self.language_manager.t("search_phrases")
+            self.search_input.hint_text = self.language_manager.t("search_placeholder")
+        
+        # Atualiza botões de gerenciamento
+        if hasattr(self, 'add_button'):
+            self.add_button.text = self.language_manager.t("add_phrase")
+        if hasattr(self, 'update_button'):
+            self.update_button.text = self.language_manager.t("update_phrase")
+        if hasattr(self, 'delete_button'):
+            self.delete_button.text = self.language_manager.t("delete_phrase")
+        if hasattr(self, 'import_button'):
+            self.import_button.text = self.language_manager.t("import_phrases")
+        if hasattr(self, 'export_button'):
+            self.export_button.text = self.language_manager.t("export_phrases")
+        if hasattr(self, 'select_all_button'):
+            self.select_all_button.text = self.language_manager.t("select_all")
+        if hasattr(self, 'logout_button'):
+            self.logout_button.text = self.language_manager.t("logout")
+        
+        # Atualiza contador de frases
+        if hasattr(self, 'total_phrases_text') and hasattr(self, 'phrases_data'):
+            self.total_phrases_text.value = self.language_manager.t("total_phrases").format(len(self.phrases_data))
+    
     def _build_ui(self):
         """Constrói a interface do usuário."""
-        self.page.snack_bar = ft.SnackBar(content=ft.Text(""), action="OK")
+        self.page.snack_bar = ft.SnackBar(content=ft.Text(""), action=self.language_manager.t("ok"))
 
         # Label de lembretes
         self.label_lembrete = ft.Text(
-            value="Clique em 'Iniciar Lembretes' para começar.",
+            value=self.language_manager.t("click_start_reminders"),
             font_family="Arial", size=16, italic=True,
             color=TEXT_COLOR
         )
 
-        # Campos de entrada
+        # Campos de entrada com cores do tema
+        colors = self.theme_manager.get_theme_colors()
+        
         self.interval_entry = ft.TextField(
             value="5", label="Intervalo (segundos)", width=120,
             keyboard_type=ft.KeyboardType.NUMBER,
-            text_align=ft.TextAlign.CENTER
+            text_align=ft.TextAlign.CENTER,
+            color=colors['TEXT_COLOR'],
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
+            border_color=colors['BORDER_COLOR']
         )
         self.timeout_entry = ft.TextField(
             value="0", label="Tempo Limite (minutos)", width=120,
             keyboard_type=ft.KeyboardType.NUMBER,
-            text_align=ft.TextAlign.CENTER
+            text_align=ft.TextAlign.CENTER,
+            color=colors['TEXT_COLOR'],
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
+            border_color=colors['BORDER_COLOR']
         )
 
         # Botões de controle de lembretes
         self.start_button = ft.ElevatedButton(
-            "Iniciar Lembretes",
+            self.language_manager.t("start_reminders"),
             on_click=self._on_start_reminders_click,
             bgcolor=ACCENT_COLOR,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.stop_button = ft.ElevatedButton(
-            "Parar Lembretes",
+            self.language_manager.t("stop_reminders"),
             on_click=self.ui_handlers.stop_reminders_gui,
             disabled=True,
             bgcolor=ft.Colors.RED_200,
@@ -183,26 +282,34 @@ class PhraseManagerApp:
             spacing=10
         )
 
-        # Campo de entrada de frases
+        # Campo de entrada de frases com cores do tema
         self.phrase_input = ft.TextField(
             label="Frase", expand=True, multiline=True, min_lines=1, max_lines=3,
             on_change=lambda e: self.ui_handlers._update_button_states(),
+            color=colors['TEXT_COLOR'],
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
+            border_color=colors['BORDER_COLOR'],
+            fill_color=colors['SURFACE_COLOR']
         )
 
-        # Campo de busca de frases
+        # Campo de busca de frases com cores do tema
         self.search_input = ft.TextField(
-            label="🔍 Buscar frases...", 
+            label=self.language_manager.t("search_phrases"), 
             expand=True, 
             on_change=self._on_search_change,
             prefix_icon=ft.Icons.SEARCH,
-            hint_text="Digite para buscar frases",
-            border_radius=8
+            hint_text=self.language_manager.t("search_placeholder"),
+            border_radius=8,
+            color=colors['TEXT_COLOR'],
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
+            border_color=colors['BORDER_COLOR'],
+            fill_color=colors['SURFACE_COLOR']
         )
 
         # Botões de gerenciamento de frases
         self._create_phrase_management_buttons()
         
-        # Dropdown de ordenação
+        # Dropdown de ordenação com cores do tema
         options = [ft.dropdown.Option(text=key, key=key) for key in self.opcoes_ordenacao.keys()]
         self.sort_dropdown = ft.Dropdown(
             ref=self.modo_ordenacao,
@@ -210,7 +317,11 @@ class PhraseManagerApp:
             value=list(self.opcoes_ordenacao.keys())[0],
             on_change=self._apply_sort,
             label="Ordenar por",
-            width=280
+            width=280,
+            color=colors['TEXT_COLOR'],
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
+            border_color=colors['BORDER_COLOR'],
+            fill_color=colors['SURFACE_COLOR']
         )
 
         # Lista de frases
@@ -220,7 +331,7 @@ class PhraseManagerApp:
         )
         self.phrase_list_manager = PhraseListManager(self.page, self.list_view)
         
-        self.total_phrases_text = ft.Text("Total de Frases: 0", weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
+        self.total_phrases_text = ft.Text(self.language_manager.t("total_phrases").format(0), weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
         
         # Texto de instrução para seleção múltipla
         self.multi_select_info = ft.Text(
@@ -235,90 +346,80 @@ class PhraseManagerApp:
             on_change=self._on_multi_select_mode_change
         )
 
-        # Cria o display de coordenadas se o rastreador estiver disponível
-        coordinate_display = None
-        if self.coordinate_tracker:
-            coordinate_display = self.coordinate_tracker.create_coordinate_display()
-
         # Adiciona todos os elementos à página
-        self._add_elements_to_page(coordinate_display, reminder_config_row)
+        self._add_elements_to_page(reminder_config_row)
     
     def _create_phrase_management_buttons(self):
         """Cria os botões de gerenciamento de frases."""
+        colors = self.theme_manager.get_theme_colors()
+        
         self.add_button = ft.ElevatedButton(
-            "Adicionar Frase",
+            self.language_manager.t("add_phrase"),
             on_click=self.ui_handlers.add_phrase_from_input,
-            bgcolor=ACCENT_COLOR,
+            bgcolor=colors['ACCENT_COLOR'],
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.update_button = ft.ElevatedButton(
-            "Atualizar Frase",
+            self.language_manager.t("update_phrase"),
             on_click=self.ui_handlers.on_update_selected,
             disabled=True,
-            bgcolor=ft.Colors.GREY_400,
+            bgcolor=colors['DISABLED_COLOR'],
             color=ft.Colors.GREY_600,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.delete_button = ft.ElevatedButton(
-            "Excluir Frase",
+            self.language_manager.t("delete_phrase"),
             on_click=self.ui_handlers.on_delete_selected,
             disabled=True,
-            bgcolor=ft.Colors.GREY_400,
+            bgcolor=colors['DISABLED_COLOR'],
             color=ft.Colors.GREY_600,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.import_button = ft.ElevatedButton(
-            "Importar Frases",
+            self.language_manager.t("import_phrases"),
             on_click=self.import_phrases_gui,
-            bgcolor=SECONDARY_ACCENT_COLOR,
+            bgcolor=colors['SECONDARY_ACCENT_COLOR'],
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.export_button = ft.ElevatedButton(
-            "Exportar Frases",
+            self.language_manager.t("export_phrases"),
             on_click=self.export_phrases_gui,
             bgcolor=ft.Colors.GREEN_600,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
-        self.save_position_button = ft.ElevatedButton(
-            "💾 Salvar Posição",
-            on_click=self.save_current_position_gui,
-            bgcolor=ft.Colors.PURPLE_600,
-            color=ft.Colors.WHITE,
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
-        )
         self.select_all_button = ft.ElevatedButton(
-            "Selecionar Tudo",
+            self.language_manager.t("select_all"),
             on_click=self.ui_handlers.select_all_phrases,
             bgcolor=ft.Colors.INDIGO_600,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
         self.logout_button = ft.ElevatedButton(
-            "Sair/Logout",
+            self.language_manager.t("logout"),
             on_click=self._on_logout,
             bgcolor=ft.Colors.RED_600,
             color=ft.Colors.WHITE,
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=5))
         )
     
-    def _add_elements_to_page(self, coordinate_display, reminder_config_row):
+    def _add_elements_to_page(self, reminder_config_row):
         """Adiciona todos os elementos à página."""
+        colors = self.theme_manager.get_theme_colors()
+        
         self.page.add(
-            # Adiciona o display de coordenadas no topo se disponível
-            coordinate_display if coordinate_display else ft.Container(height=0),
             ft.Container(height=10),
             self.label_lembrete,
             ft.Container(height=15),
             reminder_config_row,
-            ft.Divider(height=30, thickness=2, color=ft.Colors.GREY_300),
-            ft.Text("Gerenciamento de Frases", size=18, weight=ft.FontWeight.BOLD, color=TEXT_COLOR),
+            ft.Divider(height=30, thickness=2, color=colors['BORDER_COLOR']),
+            ft.Text("Gerenciamento de Frases", size=18, weight=ft.FontWeight.BOLD, color=colors['TEXT_COLOR']),
             ft.Container(height=15),
             ft.Row(
                 controls=[
-                    ft.Text("Ordenar por:", color=TEXT_COLOR),
+                    ft.Text("Ordenar por:", color=colors['TEXT_COLOR']),
                     self.sort_dropdown
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
@@ -354,7 +455,6 @@ class PhraseManagerApp:
                             ft.Container(height=10),
                             self.import_button,
                             self.export_button,
-                            self.save_position_button,
                             ft.Container(height=20),
                             self.logout_button
                         ],
@@ -415,7 +515,7 @@ class PhraseManagerApp:
             self.phrases_data, 
             self.ui_handlers.on_list_item_select
         )
-        self.total_phrases_text.value = f"Total de Frases: {len(self.phrases_data)}"
+        self.total_phrases_text.value = self.language_manager.t("total_phrases").format(len(self.phrases_data))
         self.page.update()
     
     def _show_duplicate_phrase_alert(self, duplicate_phrase):
@@ -465,39 +565,6 @@ class PhraseManagerApp:
         """Manipula o clique no botão de iniciar lembretes."""
         task = self.page.run_task(self.ui_handlers.start_reminders_gui, e)
         
-    def save_current_position_gui(self, e=None):
-        """Salva a posição atual quando chamado pela UI."""
-        try:
-            if self.window_manager.save_window_position():
-                x, y, width, height = self.window_manager.get_window_position()
-                monitor = self.window_manager.detect_monitor(x)
-                
-                # Atualiza o snack bar
-                self.page.snack_bar.content = ft.Text(f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})", color=ft.Colors.WHITE)
-                self.page.snack_bar.bgcolor = ft.Colors.GREEN_700
-                
-                # Atualiza o label
-                self.label_lembrete.value = f"✅ Posição salva: x={x}, y={y}, {width}x{height} ({monitor})"
-                self.label_lembrete.color = ft.Colors.GREEN_600
-            else:
-                # Atualiza o snack bar
-                self.page.snack_bar.content = ft.Text("❌ Erro ao salvar posição", color=ft.Colors.WHITE)
-                self.page.snack_bar.bgcolor = ft.Colors.RED_700
-                
-                # Atualiza o label
-                self.label_lembrete.value = "❌ Erro ao salvar posição"
-                self.label_lembrete.color = ft.Colors.RED_600
-            
-            # Mostra o snack bar e atualiza a página
-            self.page.snack_bar.open = True
-            self.page.update()
-        except Exception as e:
-            print(f"Erro ao salvar posição: {e}")
-            self.page.snack_bar.content = ft.Text(f"❌ Erro: {e}", color=ft.Colors.WHITE)
-            self.page.snack_bar.bgcolor = ft.Colors.RED_700
-            self.page.snack_bar.open = True
-            self.page.update()
-    
     async def stop_reminders_gui_async(self):
         """Para os lembretes de forma assíncrona."""
         if not self.lembrete_ativo:
@@ -630,12 +697,6 @@ class PhraseManagerApp:
             self.page.snack_bar.content = ft.Text(f"❌ Erro: {str(ex)}", color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
-
-    async def _start_coordinate_tracking(self):
-        """Inicia o rastreamento de coordenadas após um pequeno delay."""
-        await asyncio.sleep(1.0)  # Aguarda a UI carregar completamente
-        if self.coordinate_tracker:
-            await self.coordinate_tracker.start_tracking()
 
     async def _apply_window_size_delayed(self, width, height):
         """Aplica o tamanho da janela com delay para garantir que seja respeitado."""
