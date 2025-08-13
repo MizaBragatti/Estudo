@@ -156,6 +156,8 @@ class PhraseManagerApp:
         if not self.multi_select_mode:
             # Se desativou o modo, limpa a seleção múltipla
             self.phrase_list_manager.clear_selection()
+            self.select_all_button.text = self.language_manager.t("select_all")
+            self.select_all_button.update()
             self._reload_list_view_with_sorted_phrases()
             self.ui_handlers._update_button_states()
     
@@ -223,7 +225,12 @@ class PhraseManagerApp:
         if hasattr(self, 'export_button'):
             self.export_button.text = self.language_manager.t("export_phrases")
         if hasattr(self, 'select_all_button'):
-            self.select_all_button.text = self.language_manager.t("select_all")
+            # Verifica o estado atual para definir o texto correto
+            if hasattr(self, 'phrase_list_manager') and hasattr(self, 'phrases_data'):
+                all_selected = len(self.phrase_list_manager.selected_phrases) == len(self.phrases_data)
+                self.select_all_button.text = self.language_manager.t("deselect_all") if all_selected else self.language_manager.t("select_all")
+            else:
+                self.select_all_button.text = self.language_manager.t("select_all")
         if hasattr(self, 'logout_button'):
             self.logout_button.text = self.language_manager.t("logout")
         
@@ -488,6 +495,8 @@ class PhraseManagerApp:
         self.phrase_input.value = ""
         self.phrase_input.update()
         self.phrase_list_manager.clear_selection()  # Limpa seleção múltipla
+        self.select_all_button.text = self.language_manager.t("select_all")
+        self.select_all_button.update()
         self._apply_sort()
         self.ui_handlers._update_button_states()
 

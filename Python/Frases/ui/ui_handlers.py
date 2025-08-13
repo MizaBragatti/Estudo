@@ -7,7 +7,7 @@ import random
 import asyncio
 import flet as ft
 from api.internal_client import get_api_client
-from utils.constants import ACCENT_COLOR, SECONDARY_ACCENT_COLOR
+from utils.constants import ACCENT_COLOR, SECONDARY_ACCENT_COLOR, TEXT_COLOR
 
 
 class UIHandlers:
@@ -40,6 +40,8 @@ class UIHandlers:
         else:
             # Seleção simples (comportamento original)
             self.app.phrase_list_manager.clear_selection()
+            self.app.select_all_button.text = self.app.language_manager.t("select_all")
+            self.app.select_all_button.update()
             self.app.phrase_input.value = phrase_text
             self.app.frase_selecionada_para_edicao = phrase_text
             self.app.phrase_list_manager.reload_list_view_with_sorted_phrases(
@@ -182,6 +184,11 @@ class UIHandlers:
             self.app.phrase_list_manager.clear_selection()
             self.app.frase_selecionada_para_edicao = None
             self.app.phrase_input.value = ""
+            
+            # Atualiza o botão select_all para o estado correto
+            self.app.select_all_button.text = self.app.language_manager.t("select_all")
+            self.app.select_all_button.update()
+            
             # Removido phrase_input.update() duplicado - será feito em _load_and_display_phrases_initial()
             self.page.update()
             self.app._load_and_display_phrases_initial()
@@ -197,15 +204,24 @@ class UIHandlers:
         self.app.dialog_manager.show_confirmation_dialog(title, message, confirm_delete)
     
     def select_all_phrases(self, e):
-        """Seleciona todas as frases da lista."""
+        """Alterna entre selecionar todas e desselecionar todas as frases."""
         if not self.app.phrases_data:
-            self.page.snack_bar.content = ft.Text("Não há frases para selecionar.", color=ft.Colors.WHITE)
+            self.page.snack_bar.content = ft.Text(self.app.language_manager.t("no_phrases_to_select"), color=ft.Colors.WHITE)
             self.page.snack_bar.open = True
             self.page.update()
             return
         
-        # Seleciona todas as frases
-        self.app.phrase_list_manager.select_all_phrases()
+        # Verifica se todas as frases já estão selecionadas
+        all_selected = len(self.app.phrase_list_manager.selected_phrases) == len(self.app.phrases_data)
+        
+        if all_selected:
+            # Se todas estão selecionadas, desseleciona todas
+            self.app.phrase_list_manager.clear_selection()
+            self.app.select_all_button.text = self.app.language_manager.t("select_all")
+        else:
+            # Se nem todas estão selecionadas, seleciona todas
+            self.app.phrase_list_manager.select_all_phrases()
+            self.app.select_all_button.text = self.app.language_manager.t("deselect_all")
         
         # Limpa a seleção individual e o campo de entrada
         self.app.frase_selecionada_para_edicao = None
@@ -221,9 +237,15 @@ class UIHandlers:
         self._update_button_states()
         
         # Mostra mensagem de confirmação
-        count = len(self.app.phrases_data)
-        self.app.label_lembrete.value = self.app.language_manager.t("phrases_selected").format(count)
-        self.app.label_lembrete.color = ACCENT_COLOR
+        count = len(self.app.phrase_list_manager.selected_phrases)
+        if count > 0:
+            self.app.label_lembrete.value = self.app.language_manager.t("phrases_selected").format(count)
+            self.app.label_lembrete.color = ACCENT_COLOR
+        else:
+            self.app.label_lembrete.value = self.app.language_manager.t("click_start_reminders")
+            self.app.label_lembrete.color = TEXT_COLOR
+        
+        self.app.select_all_button.update()
         self.page.update()
     
     def on_update_selected(self, e):
