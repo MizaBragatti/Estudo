@@ -113,6 +113,18 @@ class UIHandlers:
                 self.app.label_lembrete.color = ACCENT_COLOR  # Cor verde para sucesso
                 self.app.phrase_input.value = ""
                 self.app.frase_selecionada_para_edicao = None  # Limpa a seleção
+                
+                # Gamificação: adiciona pontos por nova frase
+                try:
+                    api_client = get_api_client()
+                    user_id = api_client.get_current_user_id()
+                    if user_id:
+                        points, achievements = self.app.gamification.award_phrase_action(user_id)
+                        if points > 0 or achievements:
+                            self.app._show_gamification_notification(points, achievements)
+                except Exception as ex:
+                    print(f"Erro na gamificação de frase: {ex}")
+                
                 self.page.update()
                 self.app._load_and_display_phrases_initial()
             elif result == "PHRASE_ALREADY_EXISTS":

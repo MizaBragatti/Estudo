@@ -3,17 +3,18 @@
 Arquivo principal da aplicação - versão modularizada com APIs.
 """
 
+
 import os
 import tracemalloc
 import warnings
 import flet as ft
-# Importa o gerenciador de API em vez do frase_manager direto
 from api.api_manager import ensure_api_running, stop_api
 from api.internal_client import create_table, create_users_table
 from utils.constants import DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT
 from utils.window_manager import WindowManager
 from ui.phrase_manager_app import PhraseManagerApp
 from ui.login_screen import LoginScreen
+from config import DEVELOPER_MODE, DEVELOPER_USER
 
 # Habilita o tracemalloc para rastreamento de memória
 tracemalloc.start()
@@ -48,16 +49,33 @@ def main(page: ft.Page, window_width=DEFAULT_WINDOW_WIDTH, window_height=DEFAULT
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
         def on_logout():
-            """Callback chamado quando o usuário faz logout."""
             page.clean()
-            LoginScreen(page, on_login_success)
-        
+            if DEVELOPER_MODE:
+                # No modo dev, volta direto para app
+                PhraseManagerApp(page, window_width, window_height, on_logout=on_logout)
+            else:
+                LoginScreen(page, on_login_success)
         page.clean()
         PhraseManagerApp(page, window_width, window_height, on_logout=on_logout)
-    
-    # Limpa a página e inicia com a tela de login
-    page.clean()
-    LoginScreen(page, on_login_success)
+
+    # Modo desenvolvedor: pula login e entra direto
+    if DEVELOPER_MODE:
+        print("[DEV MODE] Login automático como:", DEVELOPER_USER)
+        # Opcional: criar usuário dev se não existir
+        api_client = None
+        try:
+            from api.internal_client import get_api_client
+            api_client = get_api_client()
+            if not api_client.login(DEVELOPER_USER, DEVELOPER_USER)[0]:
+                api_client.register_user(DEVELOPER_USER, DEVELOPER_USER)
+        except Exception as e:
+            print("[DEV MODE] Erro ao garantir usuário dev:", e)
+        page.clean()
+        PhraseManagerApp(page, window_width, window_height, on_logout=on_login_success)
+    else:
+        # Limpa a página e inicia com a tela de login
+        page.clean()
+        LoginScreen(page, on_login_success)
 
 
 def main_with_position(page: ft.Page, saved_position: dict):
@@ -95,19 +113,35 @@ def main_with_position(page: ft.Page, saved_position: dict):
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
         def on_logout():
-            """Callback chamado quando o usuário faz logout."""
             page.clean()
-            LoginScreen(page, on_login_success)
-        
+            if DEVELOPER_MODE:
+                PhraseManagerApp(page, saved_width, saved_height, on_logout=on_logout)
+            else:
+                LoginScreen(page, on_login_success)
         page.clean()
-        # Aplica a posição usando o WindowManager
         window_manager = WindowManager()
         window_manager.apply_window_position_and_size(saved_position)
         PhraseManagerApp(page, saved_width, saved_height, on_logout=on_logout)
-    
-    # Limpa a página e inicia com a tela de login
-    page.clean()
-    LoginScreen(page, on_login_success)
+
+    # Modo desenvolvedor: pula login e entra direto
+    if DEVELOPER_MODE:
+        print("[DEV MODE] Login automático como:", DEVELOPER_USER)
+        api_client = None
+        try:
+            from api.internal_client import get_api_client
+            api_client = get_api_client()
+            if not api_client.login(DEVELOPER_USER, DEVELOPER_USER)[0]:
+                api_client.register_user(DEVELOPER_USER, DEVELOPER_USER)
+        except Exception as e:
+            print("[DEV MODE] Erro ao garantir usuário dev:", e)
+        page.clean()
+        window_manager = WindowManager()
+        window_manager.apply_window_position_and_size(saved_position)
+        PhraseManagerApp(page, saved_width, saved_height, on_logout=on_login_success)
+    else:
+        # Limpa a página e inicia com a tela de login
+        page.clean()
+        LoginScreen(page, on_login_success)
 
 
 if __name__ == "__main__":

@@ -68,3 +68,4 @@ Analisar todos os texto da interface para que sejam dinamicos conforme internaci
 Implementar loading ao carregar as frases
 Verificar porque está retornando "Error: Frase adicionada com sucesso!" - ok
 Verificar porque a tela de login está alterando quando voltamos da tela de configuração
+Implementar o modo desenvolvedor

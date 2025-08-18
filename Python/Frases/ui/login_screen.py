@@ -117,12 +117,17 @@ class LoginScreen:
             color=ft.Colors.BLUE_500
         )
 
-        # Cabeçalho com título e botão de configurações
+        # Cabeçalho centralizado com título e botão de configurações
         header_row = ft.Row(
             controls=[
-                ft.Container(width=40),  # Espaçamento à esquerda
-                ft.Text(self.language_manager.t("welcome"), size=24, weight=ft.FontWeight.BOLD, color=colors['TEXT_COLOR']),
-                ft.Container(expand=True),  # Preenche o espaço
+                ft.Text(
+                    self.language_manager.t("welcome"),
+                    size=24,
+                    weight=ft.FontWeight.BOLD,
+                    color=colors['TEXT_COLOR'],
+                    text_align=ft.TextAlign.CENTER,
+                    expand=True
+                ),
                 self.settings_button
             ],
             alignment=ft.MainAxisAlignment.CENTER,
@@ -145,7 +150,8 @@ class LoginScreen:
                 ],
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=10
+                spacing=10,
+                expand=True
             )
         )
         # Configura a snack bar para mensagens
