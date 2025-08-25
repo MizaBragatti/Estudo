@@ -48,7 +48,7 @@ def main(page: ft.Page, window_width=DEFAULT_WINDOW_WIDTH, window_height=DEFAULT
     
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
-        def on_logout():
+        def on_logout(e=None):
             page.clean()
             if DEVELOPER_MODE:
                 # No modo dev, volta direto para app
@@ -112,7 +112,7 @@ def main_with_position(page: ft.Page, saved_position: dict):
     
     def on_login_success():
         """Callback chamado quando o login é bem-sucedido."""
-        def on_logout():
+        def on_logout(e=None):
             page.clean()
             if DEVELOPER_MODE:
                 PhraseManagerApp(page, saved_width, saved_height, on_logout=on_logout)

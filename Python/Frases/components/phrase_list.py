@@ -25,21 +25,28 @@ class PhraseListManager:
         if self.phrases_data:
             for i, phrase in enumerate(self.phrases_data):
                 is_selected = phrase in self.selected_phrases
-                item_text = ft.Text(
-                    f"{i+1}. {phrase}", 
-                    color=ft.Colors.WHITE if is_selected else TEXT_COLOR,
-                    weight=ft.FontWeight.BOLD if is_selected else ft.FontWeight.NORMAL
-                )
+                from utils.theme_manager import ThemeManager
+                theme_colors = ThemeManager().get_theme_colors()
+                # Ajusta cor do texto para hover: se hover ou selecionado, texto branco; senão, cor do tema
+                def get_item_text(is_hovered=False):
+                    return ft.Text(
+                        f"{i+1}. {phrase}",
+                        color=ft.Colors.WHITE if is_selected or is_hovered else theme_colors['TEXT_COLOR'],
+                        weight=ft.FontWeight.BOLD if is_selected else ft.FontWeight.NORMAL
+                    )
+                # ListTile não tem callback direto de hover, mas podemos garantir contraste para selecionado e padrão
                 list_tile = ft.ListTile(
-                    title=item_text,
+                    title=get_item_text(),
                     on_click=lambda e, p=phrase: on_item_select(e, p) if on_item_select else None,
-                    hover_color=ft.Colors.BLUE_50,
+                    hover_color=ft.Colors.BLUE_600 if theme_colors['name']=='dark' else ft.Colors.BLUE_50,
                     bgcolor=ft.Colors.BLUE_600 if is_selected else None,
                     shape=ft.RoundedRectangleBorder(radius=8) if is_selected else None
                 )
                 self.list_view.controls.append(list_tile)
         else:
-            self.list_view.controls.append(ft.Text("Nenhuma frase cadastrada ainda.", color=TEXT_COLOR))
+            from utils.theme_manager import ThemeManager
+            theme_colors = ThemeManager().get_theme_colors()
+            self.list_view.controls.append(ft.Text("Nenhuma frase cadastrada ainda.", color=theme_colors['TEXT_COLOR']))
         
         self.page.update()
     
@@ -56,9 +63,11 @@ class PhraseListManager:
                 if is_duplicate:
                     duplicate_index = i
                 
+                from utils.theme_manager import ThemeManager
+                theme_colors = ThemeManager().get_theme_colors()
                 item_text = ft.Text(
-                    f"{i+1}. {phrase}", 
-                    color=ft.Colors.WHITE if is_duplicate else TEXT_COLOR,
+                    f"{i+1}. {phrase}",
+                    color=ft.Colors.WHITE if is_duplicate else theme_colors['TEXT_COLOR'],
                     weight=ft.FontWeight.BOLD if is_duplicate else ft.FontWeight.NORMAL
                 )
                 
@@ -71,7 +80,9 @@ class PhraseListManager:
                 )
                 self.list_view.controls.append(list_tile)
         else:
-            self.list_view.controls.append(ft.Text("Nenhuma frase cadastrada ainda.", color=TEXT_COLOR))
+            from utils.theme_manager import ThemeManager
+            theme_colors = ThemeManager().get_theme_colors()
+            self.list_view.controls.append(ft.Text("Nenhuma frase cadastrada ainda.", color=theme_colors['TEXT_COLOR']))
         
         self.page.update()
         

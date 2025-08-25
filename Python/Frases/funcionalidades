@@ -61,11 +61,11 @@ Buscar um contexto na internet sobre a frase
 Na tela de configuração ter uma opção para selecionar o tema e pre-visualizar como ficará 
 Traduzir o app e ter a opção de escolher a lingua - ok
 A lista de frases está com texto preto e o texto do checkbox
-O botão Select all quando clicado, mudar para desselect all
+O botão Select all quando clicado, mudar para desselect all - ok
 Titulo da página de configuração continua com problema - ok
 Os botões para mudar a linguagem, não estão mudando o texto. - ok
 Analisar todos os texto da interface para que sejam dinamicos conforme internacionalização - ok
 Implementar loading ao carregar as frases
 Verificar porque está retornando "Error: Frase adicionada com sucesso!" - ok
-Verificar porque a tela de login está alterando quando voltamos da tela de configuração
-Implementar o modo desenvolvedor
+Verificar porque a tela de login está alterando quando voltamos da tela de configuração - ok
+Implementar o modo desenvolvedor - ok

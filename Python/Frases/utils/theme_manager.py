@@ -100,5 +100,6 @@ class ThemeManager:
             'SURFACE_COLOR': self.current_theme["surface_color"],
             'BORDER_COLOR': self.current_theme["border_color"],
             'DISABLED_COLOR': self.current_theme["disabled_color"],
-            'ERROR_COLOR': self.current_theme["error_color"]
+            'ERROR_COLOR': self.current_theme["error_color"],
+            'name': self.current_theme["name"]
         }
