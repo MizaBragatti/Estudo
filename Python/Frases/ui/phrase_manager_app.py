@@ -242,15 +242,15 @@ class PhraseManagerApp:
         """Constrói a interface do usuário."""
         self.page.snack_bar = ft.SnackBar(content=ft.Text(""), action=self.language_manager.t("ok"))
 
+        # Cores do tema
+        colors = self.theme_manager.get_theme_colors()
+
         # Label de lembretes
         self.label_lembrete = ft.Text(
             value=self.language_manager.t("click_start_reminders"),
             font_family="Arial", size=16, italic=True,
-            color=TEXT_COLOR
+            color=colors['TEXT_COLOR']
         )
-
-        # Campos de entrada com cores do tema
-        colors = self.theme_manager.get_theme_colors()
         
         self.interval_entry = ft.TextField(
             value="5", label=self.language_manager.t("interval_seconds"), width=120,
@@ -312,11 +312,12 @@ class PhraseManagerApp:
 
         # Campo de busca de frases com cores do tema
         self.search_input = ft.TextField(
-            label=self.language_manager.t("search_phrases"), 
-            expand=True, 
+            label=self.language_manager.t("search_phrases"),
+            expand=True,
             on_change=self._on_search_change,
-            prefix_icon=ft.Icons.SEARCH,
+            prefix=ft.Icon(ft.Icons.SEARCH, color=colors['TEXT_COLOR']),
             hint_text=self.language_manager.t("search_placeholder"),
+            hint_style=ft.TextStyle(color=colors['TEXT_COLOR']),
             border_radius=8,
             color=colors['TEXT_COLOR'],
             label_style=ft.TextStyle(color=colors['TEXT_COLOR']),
@@ -343,25 +344,38 @@ class PhraseManagerApp:
         )
 
         # Lista de frases
+
         self.list_view = ft.ListView(
-            expand=1, padding=10, auto_scroll=False,
+            padding=10, auto_scroll=False,
             spacing=5
         )
+        self.list_view_container = ft.Container(
+            content=self.list_view,
+            bgcolor=colors['SURFACE_COLOR'],
+            border=ft.border.all(2, colors['BORDER_COLOR']),
+            border_radius=8,
+            expand=True
+        )
         self.phrase_list_manager = PhraseListManager(self.page, self.list_view)
-        
-        self.total_phrases_text = ft.Text(self.language_manager.t("total_phrases").format(0), weight=ft.FontWeight.BOLD, color=TEXT_COLOR)
-        
+
+        self.total_phrases_text = ft.Text(
+            self.language_manager.t("total_phrases").format(0),
+            weight=ft.FontWeight.BOLD,
+            color=colors['TEXT_COLOR']
+        )
+
         # Texto de instrução para seleção múltipla
         self.multi_select_info = ft.Text(
             self.language_manager.t("multiple_selection_info"),
-            size=12, italic=True, color=ft.Colors.GREY_600
+            size=12, italic=True, color=colors['TEXT_COLOR']
         )
-        
+
         # Checkbox para modo de seleção múltipla
         self.multi_select_checkbox = ft.Checkbox(
             label=self.language_manager.t("multiple_selection_mode"),
             value=False,
-            on_change=self._on_multi_select_mode_change
+            on_change=self._on_multi_select_mode_change,
+            label_style=ft.TextStyle(color=colors['TEXT_COLOR'])
         )
 
         # Adiciona todos os elementos à página
@@ -456,7 +470,7 @@ class PhraseManagerApp:
                 controls=[
                     ft.Column(
                         controls=[
-                            self.list_view,
+                            self.list_view_container,
                             self.total_phrases_text,
                             self.multi_select_info,
                             self.multi_select_checkbox
